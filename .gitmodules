@@ -1,0 +1,6 @@
+[submodule "tchap-sample-bot1"]
+	path = tchap-sample-bot1
+	url = https://github.com/Hpoinseaux/tchap-sample-bot.git
+[submodule "tchapbot"]
+	path = tchapbot
+	url = https://github.com/Hpoinseaux/tchap-sample-bot.git
