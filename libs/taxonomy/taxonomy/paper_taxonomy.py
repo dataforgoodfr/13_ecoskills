@@ -11,16 +11,6 @@ from taxonomy.publication_taxonomy import (
 from taxonomy.geographical_taxonomy import (
     Regional_group,
     Geographical_scope,
-    Studied_country,
-)
-from taxonomy.themes_taxonomy import (
-    Human_needs,
-    Studied_sector,
-    Studied_policy_area,
-    Natural_ressource,
-    Wellbeing,
-    Justice_consideration,
-    Planetary_boundaries,
 )
 
 
