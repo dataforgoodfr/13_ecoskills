@@ -3,7 +3,7 @@
 from pipelineblocks.llm.ingestionblock.base import MetadatasLLMInfBlock
 from kotaemon.llms.chats.openai import ChatOpenAI
 from pydantic import BaseModel
-from kotaemon.base.schema import LLMInterface, HumanMessage, SystemMessage
+from kotaemon.base.schema import HumanMessage
 
 # All the OpenAI LLM Inference blocks are mainly used for 
 # Ollama models (local deployment) according to the Kotaemon logic
