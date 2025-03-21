@@ -5,7 +5,7 @@ The folder 'kotaemon' is a git subtree folder, that can be synchronized with the
 
 This 'root' project hosts all the common / generic tools built by Data4Good.
 
-When you make a code change in your 'local' project, all the code alterations that are included in the 'root' project (the 'kotaemon' folder) could be push to contribute to the 'root' subtree project. (by the use of your intermediary branch like "13_sobriety_version")
+When you make a code change in your 'local' project, all the code alterations that are included in the 'root' project (the 'kotaemon' folder) could be push to contribute to the 'root' subtree project. (by the use of your intermediary branch like "13_ecoskills_version")
 
 Inversely, you can regularly pull the 'root' main/branch changes.
 
@@ -24,7 +24,7 @@ To contribute within your branch :
 
 ```git subtree push --prefix=rag_system/kotaemon  https://github.com/dataforgoodfr/kotaemon.git [MY_BRANCH]```
 
-Replace [MY_BRANCH] with your branch version : 13_ecoskills_version, 13_sobriety_version ...
+Replace [MY_BRANCH] with your branch version : 13_ecoskills_version, 13_sufficiency_version ...
 
 And if the changes are very generics => Do a Merge Request to the MAIN branch with GitHub.
 

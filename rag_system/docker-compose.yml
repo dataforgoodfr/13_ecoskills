@@ -4,7 +4,7 @@ services:
       context: ./kotaemon
       target: full
     pull_policy: if_not_present
-    entrypoint: ["/bin/sh", "-c", "tail -f /dev/null"]
+    entrypoint: ["/bin/sh", "-c", "pip install -e /app/taxonomy && tail -f /dev/null"]
     environment:
       GRADIO_SERVER_NAME: 0.0.0.0
       GRADIO_SERVER_PORT: 7860
@@ -15,6 +15,7 @@ services:
       - './kotaemon/libs:/app/libs'
       - './kotaemon/ktem_app_data:/app/ktem_app_data'
       - './pipeline_scripts/:/app/pipeline_scripts'
+      - './taxonomy/:/app/taxonomy'
     depends_on:
       - ollama
       - qdrant
