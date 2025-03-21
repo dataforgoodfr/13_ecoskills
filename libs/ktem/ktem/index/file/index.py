@@ -445,6 +445,7 @@ class FileIndex(BaseIndex):
         for key, value in settings.items():
             if key.startswith(prefix):
                 stripped_settings[key[len(prefix) :]] = value
+
         obj = self._indexing_pipeline_cls.get_pipeline(stripped_settings, self.config)
         obj.Source = self._resources["Source"]
         obj.Index = self._resources["Index"]
