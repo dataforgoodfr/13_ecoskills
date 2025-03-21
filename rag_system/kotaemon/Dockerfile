@@ -44,7 +44,6 @@ RUN --mount=type=ssh  \
     pip install -e "libs/kotaemon" \
     && pip install -e "libs/ktem" \
     && pip install -e "libs/pipelineblocks" \
-    && pip install -e "libs/taxonomy" \
     && pip install "pdfservices-sdk@git+https://github.com/niallcm/pdfservices-python-sdk.git@bump-and-unfreeze-requirements"
 
 RUN --mount=type=ssh  \

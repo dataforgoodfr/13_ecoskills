@@ -26,7 +26,8 @@ from ...utils.commands import WEB_SEARCH_COMMAND
 from ...utils.rate_limit import check_rate_limit
 from .utils import download_arxiv_pdf, is_arxiv_url
 
-from ...taxonomy_test.document import paper
+#TODO good import with new taxo system
+#from ...taxonomy_test.document import paper
 
 
 KH_DEMO_MODE = getattr(flowsettings, "KH_DEMO_MODE", False)
@@ -318,7 +319,8 @@ class FileIndexPage(BasePage):
                             self.reindex = gr.Checkbox(
                                 value=False, label="Force reindex file", container=False
                             )
-                        
+                        #TODO - New metadatas system
+                        """
                         self.metadatas_values = []
                         self.metadatas_keys = []
 
@@ -341,7 +343,7 @@ class FileIndexPage(BasePage):
                             elif field_type == bool:
                                 input_component = gr.Checkbox(label=field_name, value=False)
 
-                                """
+                                
                                 elif get_origin(field_type) is list:
                                 sub_item = get_args(field_type)[0]
                                 if isinstance(sub_item , type) and issubclass(sub_item , BaseModel):
@@ -368,21 +370,6 @@ class FileIndexPage(BasePage):
                                      """
 
                                         #self.metadatas.append(sub_imp_comp)
-
-                                    # Handle Author list (multiple name & gender inputs)
-                                    #item = gr.Textbox(label=item_type.model_fields.keys()[0], interactive=True)
-                                """
-                                    author_gender = gr.Dropdown(
-                                        [g.value for g in AuthorGender], label="Gender", interactive=True
-                                    )
-                                    input_component = gr.Dataset(
-                                        components=[author_name, author_gender], label=field_name, samples=[]
-                                    )"""
-
-                            else:
-                                continue
-                            self.metadatas_keys.append(field_name)
-                            self.metadatas_values.append(input_component)
 
                     self.upload_button = gr.Button(
                         "Upload and Index", variant="primary"
