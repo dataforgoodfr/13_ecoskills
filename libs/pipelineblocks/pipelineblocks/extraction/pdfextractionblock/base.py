@@ -1,6 +1,7 @@
 from typing import AsyncGenerator, Iterator
 
 from kotaemon.base import BaseComponent, Document
+from pydantic import BaseModel
 
 class BasePdfExtractionBlock(BaseComponent):
 
