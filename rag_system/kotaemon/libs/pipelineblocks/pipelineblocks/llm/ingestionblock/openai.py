@@ -29,15 +29,9 @@ class OpenAIMetadatasLLMInference(MetadatasLLMInfBlock):
         json_schema = super()._invoke_json_schema_from_taxo()
 
         enriched_prompt = super()._adjust_prompt_according_to_doc_type(text, doc_type, inference_type)
-
-        if self.language != "English":
-            system_message = self._build_a_system_message_to_force_language(language=self.language)
-            messages = [system_message, HumanMessage(content=enriched_prompt)]
-        else:
-            messages = HumanMessage(content=enriched_prompt)
         
         response = self.llm.invoke(
-                messages= messages,
+                messages= HumanMessage(content=enriched_prompt),
                 temperature=0,
                 response_format={"type":"json_schema",
                                 "json_schema": {"schema":json_schema,
