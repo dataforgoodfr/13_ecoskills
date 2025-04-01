@@ -190,7 +190,7 @@ class IndexingPipeline(VectorIndexing):
 
         entire_doc = "\n".join(chunks)
 
-        logging.info(f"document extracted... ok.")
+        logging.info("document extracted... ok.")
 
 
         # 1) Inference on entire doc
@@ -199,7 +199,7 @@ class IndexingPipeline(VectorIndexing):
                                                         doc_type  = 'entire_doc', 
                                                         inference_type = 'generic')
         
-        logging.info(f"LLM metadatas inference (on entire doc)... ok.")
+        logging.info("LLM metadatas inference (on entire doc)... ok.")
         
         metadatas_ed = entire_doc_metadatas.model_dump()
 
@@ -219,7 +219,7 @@ class IndexingPipeline(VectorIndexing):
         
         logging.info(f"Added {count} new special doc extract from the metadas itself..") """
 
-        logging.info(f"Chunks llm inference for this doc :")
+        logging.info("Chunks llm inference for this doc :")
         
         for i, chunk in enumerate(chunks):
 
@@ -254,12 +254,12 @@ class IndexingPipeline(VectorIndexing):
             
             logging.info(f"Added {count} new special doc extract from the metadas itself..")
         
-        logging.info(f"All chunks metadatas inference & special extending DONE.")
-        logging.info(f"Export to vectore store througth Kotaemon....")
+        logging.info("All chunks metadatas inference & special extending DONE.")
+        logging.info("Export to vectore store througth Kotaemon....")
 
         super().run(text=all_text, metadatas=all_metadatas)
 
-        logging.info(f"Export OK")
+        logging.info("Export OK")
 
         return None
     
