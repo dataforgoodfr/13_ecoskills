@@ -40,6 +40,12 @@ logging.basicConfig(
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
+DOCSTORE_PATH = "/app/ktem_app_data/user_data/docstore"
+
+COLLECTION_NAME= 'index_1' # Check here your collection throught QDRANT Database dashboard & collection in docstore (ktem_app_data/user_data/doc_store)
+RETRIEVAL_MODE= 'hybrid'
+
+
 #PDF_FOLDER = "./data_pdf/other_lit"
 
 # ---- Do not touch (temporary) ------------- #
@@ -52,17 +58,20 @@ class RetrievalPipeline(VectorRetrieval):
 
     # --- Kotaemon db for request embedding & retrieve ----
 
+    retrieval_mode : str = RETRIEVAL_MODE
+
     vector_store: QdrantVectorStore = Param(
         lazy(QdrantVectorStore).withx(
             url=f"http://{qdrant_host}:6333",
             api_key="None",
-            collection_name= "index_5"
+            collection_name= COLLECTION_NAME,
         ),
         ignore_ui=True,  # usefull ?
     )
     doc_store: LanceDBDocumentStore = Param(
         lazy(LanceDBDocumentStore).withx(
-            path="./kotaemon-custom/kotaemon/ktem_app_data/user_data/docstore",
+            path=DOCSTORE_PATH,
+            collection_name= COLLECTION_NAME,
         ),
         ignore_ui=True,
     )
@@ -79,7 +88,7 @@ class RetrievalPipeline(VectorRetrieval):
     llm: ChatOpenAI = ChatOpenAI.withx(
         base_url=f"http://{ollama_host}:11434/v1/",
         model="gemma2:2b",
-        api_key="ollama",
+        api_key="ollama"
     )
 
     

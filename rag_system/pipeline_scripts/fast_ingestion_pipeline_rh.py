@@ -40,7 +40,10 @@ logging.basicConfig(
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
-PDF_FOLDER = "./data_pdf/academic_lit"
+DOCSTORE_PATH = "/app/ktem_app_data/user_data/docstore"
+COLLECTION_NAME= 'index_1' # Check here your collection throught QDRANT Database dashboard & collection in docstore (ktem_app_data/user_data/doc_store)
+
+PDF_FOLDER = "./data_pdf/other_lit"
 
 # ---- Do not touch (temporary) ------------- #
 
@@ -89,13 +92,14 @@ class IndexingPipeline(VectorIndexing):
         lazy(QdrantVectorStore).withx(
             url=f"http://{qdrant_host}:6333",
             api_key="None",
-            collection_name="ecoskills_test",
+            collection_name=COLLECTION_NAME,
         ),
         ignore_ui=True,  # usefull ?
     )
     doc_store: LanceDBDocumentStore = Param(
         lazy(LanceDBDocumentStore).withx(
-            path="./kotaemon-custom/kotaemon/ktem_app_data/user_data/docstore",
+            path=DOCSTORE_PATH,
+            collection_name = COLLECTION_NAME
         ),
         ignore_ui=True,
     )
@@ -217,7 +221,7 @@ class IndexingPipeline(VectorIndexing):
         logging.info(f"Added {count} new special doc extract from the metadas itself..") """
 
         logging.info(f"Chunks llm inference for this doc :")
-
+        
         for i, chunk in enumerate(chunks):
 
             chunk_metadatas = self.metadatas_llm_inference_block_chunk.run(chunk,
@@ -250,7 +254,7 @@ class IndexingPipeline(VectorIndexing):
                                                                                     reapply_fields_to_root=['functional_area'])
             
             logging.info(f"Added {count} new special doc extract from the metadas itself..")
-
+        
         logging.info(f"All chunks metadatas inference & special extending DONE.")
         logging.info(f"Export to vectore store througth Kotaemon....")
 
