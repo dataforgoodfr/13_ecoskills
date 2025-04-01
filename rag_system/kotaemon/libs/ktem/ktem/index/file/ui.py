@@ -320,9 +320,9 @@ class FileIndexPage(BasePage):
                                 value=False, label="Force reindex file", container=False
                             )
                         #TODO - New metadatas system
-                        """
                         self.metadatas_values = []
                         self.metadatas_keys = []
+                        """
 
                         for field_name, field_info in paper.model_fields.items():
                             field_type = field_info.annotation

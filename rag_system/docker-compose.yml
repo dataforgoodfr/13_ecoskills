@@ -16,6 +16,7 @@ services:
       - './kotaemon/ktem_app_data:/app/ktem_app_data'
       - './pipeline_scripts/:/app/pipeline_scripts'
       - './taxonomy/:/app/taxonomy'
+      - './data_pdf/:/app/data_pdf'
     depends_on:
       - ollama
       - qdrant
