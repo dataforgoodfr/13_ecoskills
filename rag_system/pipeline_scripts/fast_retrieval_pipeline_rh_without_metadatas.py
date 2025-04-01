@@ -1,21 +1,12 @@
-from typing import List, Tuple
-import logging
-import pathlib
 
-from kotaemon.base import Document, Param, lazy
-from kotaemon.base.component import BaseComponent
-from kotaemon.base.schema import LLMInterface
+import logging
+
+from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
-from kotaemon.indices import VectorIndexing
-from kotaemon.indices.vectorindex import VectorRetrieval, TextVectorQA
+from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
 from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
-
-from pipelineblocks.extraction.pdfextractionblock.pdf_to_markdown import PdfExtractionToMarkdownBlock
-from pipelineblocks.llm.ingestionblock.openai import OpenAIMetadatasLLMInference
-
-from taxonomy.document import EntireDocument, ChunkOfDocument
 
 LOG_LEVEL = logging.INFO
 # When you set the level, all messages from a higher level of severity are also

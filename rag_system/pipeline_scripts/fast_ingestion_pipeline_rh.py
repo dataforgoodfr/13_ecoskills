@@ -2,12 +2,9 @@ from typing import List, Tuple
 import logging
 import pathlib
 
-from kotaemon.base import Document, Param, lazy
-from kotaemon.base.component import BaseComponent
-from kotaemon.base.schema import LLMInterface
+from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices import VectorIndexing
-from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
 from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
@@ -115,12 +112,14 @@ class IndexingPipeline(VectorIndexing):
 
     pdf_path: str
 
-    def enrich_metadatas_layer(self, metadatas_base : dict = {},
+    def enrich_metadatas_layer(self, metadatas_base : dict | None = None,
                                     doc_type : str = 'unknow',
                                     inheritance_metadatas : dict | None = None,
                                     reapply_fields_to_root : list | None = None):
         """TODO Convert this function into method with a MetadatasManagement Object"""
 
+        if metadatas_base is None:
+            metadatas_base = {}
         metadatas_base['doc_type'] = doc_type
 
         if inheritance_metadatas is not None:
@@ -148,9 +147,9 @@ class IndexingPipeline(VectorIndexing):
             if metadata_key in metadatas_base.keys():
                 content_list = metadatas_base[metadata_key]
                 if content_list is not None:
-                    if type(content_list)==str:
+                    if content_list.isinstance(str):
                         content_list = [content_list]
-                    if type(content_list)==list:
+                    if content_list.isinstance(list):
                         for text in content_list:
                             all_text.append(text)
                             all_metadatas.append(self.enrich_metadatas_layer(metadatas_base={},
