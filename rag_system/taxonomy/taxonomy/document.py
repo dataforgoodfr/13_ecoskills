@@ -38,14 +38,14 @@ class Publication_type(str, Enum):
 
 class EntireDocument(BaseModel):
     title: str
-    functional_area: Union[RessourcesHumainesDomain] = Field(discriminator='functional_area')
+    professional_functional_area: Union[RessourcesHumainesDomain] = Field(discriminator='professional_functional_area')
     authors: list[Author]
     summary: str
     year_of_publication: int
     publication_type: Publication_type
     language: Optional[str]
 
-
+# Not used ? (direct prompt inference)
 class ChunkOfDocument(BaseModel):
     key_idea_sentences: list[str]
     concrete_experience_in_the_field : Optional[list[str]]
