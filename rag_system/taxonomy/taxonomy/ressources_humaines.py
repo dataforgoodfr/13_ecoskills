@@ -10,4 +10,3 @@ class RessourcesHumainesMissions(str, Enum):  # Mandatory:	YES, Type:	EXCLUSIVE
 
 class RessourcesHumainesDomain(BaseModel):
     professional_functional_area : Literal["Ressources Humaines"]
-    missions : Set[RessourcesHumainesMissions]
