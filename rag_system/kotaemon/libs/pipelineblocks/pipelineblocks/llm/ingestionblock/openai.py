@@ -92,7 +92,7 @@ class OpenAICustomPromptLLMInference(CustomPromptLLMInfBlock):
                                 }
                             )
             
-            response_schema = super()._convert_content_to_pydantic_schema(response.content)
+            response_schema = super()._convert_content_to_pydantic_schema(content = response.content, pydantic_schema=pydantic_schema)
 
             return response_schema
         

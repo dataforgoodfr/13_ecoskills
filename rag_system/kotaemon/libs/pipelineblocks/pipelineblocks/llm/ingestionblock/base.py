@@ -75,7 +75,7 @@ class CustomPromptLLMInfBlock(BaseLLMIngestionBlock):
 
     def _convert_content_to_pydantic_schema(self, content, pydantic_schema) -> BaseModel:
             
-            return pydantic_schema.model_validate_json(content)
+        return pydantic_schema.model_validate_json(content)
 
     def run(self, *args, **kwargs) -> BaseModel:
         return NotImplementedError
