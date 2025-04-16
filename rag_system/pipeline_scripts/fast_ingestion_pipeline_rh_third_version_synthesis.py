@@ -55,22 +55,102 @@ LANGUAGE = 'French'
 DOCSTORE_PATH = "/app/ktem_app_data/user_data/docstore"
 COLLECTION_NAME = 'index_1' # Check here your collection throught QDRANT Database dashboard & collection in docstore (ktem_app_data/user_data/doc_store)
 
-PDF_FOLDER = "./data_pdf/grey_lit"
+PDF_FOLDER = "./data_pdf/test"
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
-CHUNK_SIZE = 600
-CHUNK_OVERLAP = 200
+CHUNK_SIZE = 400
+CHUNK_OVERLAP = 150
 
-MISSION_LIST = [
-            "Élaborer la politique et la stratégie RH, en cohérence avec les orientations nationales et les priorités de la structure",
-            "Gérer les parcours, les emplois et les compétences du personnel, notamment en fonctions des besoins prévisionnels de la structure",
-            "Recruter et intégrer les nouveaux candidats, par des campagnes de recrutement externe et interne, la mise en place des examens.",
-            "Accompagner les personnes et les collectifs de travail (carrière, mobilité, retraite, formation, management).",
-            "Assurer la gestion administrative, statutaire et la paie",
-            "Piloter le dialogue social et la qualité de vie au travail, ainsi la prévention des risques professionnels et psychosociaux",
-            "Développer les outils, les systèmes d'analyses de données et les systèmes d'appui RH "
-        ]
+MISSION_DICT_FR = {
+    "Définir, piloter et mettre en œuvre la stratégie RH": [
+        "Élaborer, conduire et évaluer la politique RH, en cohérence avec les orientations nationales et les priorités de la structure.",
+        "Définir les plans d'action stratégiques en matière de recrutement, GPEEC, mobilité, formation, qualité de vie au travail, communication, conditions de travail, diversité et politique managériale.",
+        "Conduire le changement et accompagner les évolutions organisationnelles, culturelles et technologiques de l'administration."
+    ],
+    "Gérer les parcours, les emplois et les compétences": [
+        "Mettre en œuvre la gestion prévisionnelle des effectifs, des emplois et des compétences (GPEEC).",
+        "Analyser les besoins actuels et futurs, cartographier les compétences, identifier les viviers et les métiers sensibles.",
+        "Conseiller les agents dans la construction de leur parcours professionnel, accompagner les mobilités, les reconversions, les transitions professionnelles, et les secondes parties de carrière.",
+        "Participer aux revues de cadres, à la constitution de viviers de talents, et à l'animation des réseaux professionnels."
+    ],
+    "Recruter, intégrer et fidéliser les agents": [
+        "Organiser les campagnes de recrutement externe et interne, concevoir les dispositifs d'intégration et de suivi (onboarding).",
+        "Accompagner les managers dans la définition des besoins en recrutement.",
+        "Promouvoir la marque employeur et développer les partenariats pour le sourcing (forums, réseaux, apprentissage).",
+        "Mettre en œuvre les concours et examens professionnels, en garantissant la sécurité juridique et l'équité des processus."
+    ],
+    "Accompagner les personnes et les collectifs de travail": [
+        "Conseiller les agents et les services en matière RH (carrière, mobilité, retraite, formation, management).",
+        "Réaliser des entretiens individualisés, animer des actions collectives de développement professionnel.",
+        "Proposer des dispositifs d'accompagnement : coaching, conseil RH de proximité, soutien à la professionnalisation des pratiques managériales.",
+        "Assurer l'accueil, l'écoute, la médiation et l'orientation vers les ressources adaptées."
+    ],
+    "Assurer la gestion administrative, statutaire et la paie": [
+        "Gérer les actes administratifs : positions, contrats, retraites, promotions, cessations de fonction.",
+        "Assurer le traitement, la vérification et la fiabilisation des rémunérations, primes et cotisations sociales.",
+        "Suivre les absences, le temps de travail, les congés, le télétravail.",
+        "Gérer les procédures de contentieux et les dossiers individuels sensibles dans le respect du cadre réglementaire."
+    ],
+    "Piloter le dialogue social et la qualité de vie au travail": [
+        "Organiser les élections professionnelles, les instances de dialogue social et les négociations collectives.",
+        "Préparer les ordres du jour, assurer le secrétariat et le suivi des décisions des instances représentatives.",
+        "Prévenir et gérer les conflits collectifs et individuels, produire des notes d'analyse du climat social.",
+        "Élaborer et mettre en œuvre les politiques de prévention des risques professionnels et psychosociaux, en lien avec les services compétents (DUERP, plans d’action, accompagnement des acteurs)."
+    ],
+    "Développer les outils, les données et les systèmes d'appui RH": [
+        "Concevoir et piloter les systèmes d'information RH (SIRH), produire les données sociales et les indicateurs (RSU, DOETH, bilans, tableaux de bord).",
+        "Appuyer la décision stratégique via l'analyse des données RH (emploi, masse salariale, diversité, égalité professionnelle).",
+        "Contribuer à la transformation numérique des fonctions RH et au développement d'une gestion fondée sur les données (data RH).",
+        "Participer à la veille réglementaire, technologique et sociétale sur les évolutions du métier RH."
+    ]
+}
+
+
+MISSION_DICT_EN = {
+    "Define, steer, and implement the HR strategy": [
+        "Develop, lead, and evaluate the HR policy in line with national guidelines and the organization's priorities.",
+        "Define strategic action plans for recruitment, workforce planning (GPEEC), mobility, training, quality of work life, communication, working conditions, diversity, and management policy.",
+        "Lead change and support organizational, cultural, and technological transformations within the administration."
+    ],
+    "Manage career paths, jobs, and skills": [
+        "Implement forward-looking management of staffing, jobs, and skills (GPEEC).",
+        "Analyze current and future needs, map out skills, identify talent pools and critical roles.",
+        "Advise employees on building their career paths, support mobility, retraining, professional transitions, and second careers.",
+        "Participate in leadership reviews, build talent pools, and facilitate professional networks."
+    ],
+    "Recruit, onboard, and retain employees": [
+        "Organize internal and external recruitment campaigns, and design onboarding and follow-up programs.",
+        "Support managers in defining recruitment needs.",
+        "Promote employer branding and develop sourcing partnerships (forums, networks, apprenticeships).",
+        "Implement competitive exams and professional assessments while ensuring legal security and fairness in the processes."
+    ],
+    "Support individuals and work groups": [
+        "Advise employees and departments on HR matters (career, mobility, retirement, training, management).",
+        "Conduct individual interviews and facilitate collective professional development activities.",
+        "Propose support mechanisms: coaching, local HR advisory, and support for the professionalization of managerial practices.",
+        "Ensure reception, listening, mediation, and guidance to appropriate resources."
+    ],
+    "Ensure administrative, statutory management and payroll": [
+        "Manage administrative acts: status, contracts, retirements, promotions, and terminations.",
+        "Process, verify, and secure the reliability of payroll, bonuses, and social contributions.",
+        "Track absences, working time, leave, and remote work.",
+        "Handle litigation procedures and sensitive individual cases within the regulatory framework."
+    ],
+    "Steer social dialogue and quality of work life": [
+        "Organize professional elections, social dialogue bodies, and collective bargaining.",
+        "Prepare agendas, ensure secretariat duties, and follow up on decisions of representative bodies.",
+        "Prevent and manage collective and individual conflicts, and produce analyses on social climate.",
+        "Develop and implement policies to prevent occupational and psychosocial risks, in collaboration with relevant services (DUERP, action plans, stakeholder support)."
+    ],
+    "Develop HR tools, data, and support systems": [
+        "Design and manage HR information systems (HRIS), and produce HR data and indicators (social report, disability declarations, dashboards, etc.).",
+        "Support strategic decision-making through HR data analysis (employment, payroll, diversity, gender equality).",
+        "Contribute to the digital transformation of HR functions and the development of data-driven management (HR data).",
+        "Participate in regulatory, technological, and societal monitoring related to the evolution of HR professions."
+    ]
+}
+
 
 # ---- Do not touch (temporary) ------------- #
 
@@ -209,150 +289,71 @@ class IndexingPipeline(VectorIndexing):
         return metadatas_base
     
 
-    def run_one_mission_inference(self, chunk : str, nb_chunk: int, mission: str, metadatas_chunk: dict | None = None):
+    def run_one_mission_inference(self, chunk : str, mission: str):
 
-        # 1 - Extraction close to original -
+        
 
-
-        logging.info(f"Chunk nb°{nb_chunk} llm inference - mission {mission} step 1/5... ")
-
-        messages = [SystemMessage(content = "You are a scientific expert of questions related to ecology, sustainability and sufficiency. "
-            "On the document, you have to make a lecture very attentive and critical."
-            "- Just respond with 'yes' or 'no'"),
-            HumanMessage(content = f"Is the following passagge have an evident link with sustainability, sufficiency, or an ecological point of view ?"
-            f"- Just say yes or no."
-            "Here's the document :")]
-
+        messages = [SystemMessage(content = f"Tu es un lecteur expert du domaine professionnel : {FUNCTIONAL_DOMAIN}."
+                "Sur ce document, tu dois faire une lecture très attentive et méticuleuse."
+                "- Réponds seulement par 'oui' ou 'non' "),
+                HumanMessage(content = f"Est-ce que le document suivant peut m'aider d'une manière ou d'une autre à conceptualiser ou " 
+                "à réaliser la mission spécifique suivante dans le concret, dans l'optique de développement durable ou à l'écologie au sein de cette mission spécifique. "
+                f"- Réponds seulement par 'oui' ou 'non' "
+                "- si tu réponds 'oui' cela veut dire que le document est très en lien, et de manière très pertinente, avec la mission spécifique suivante."
+                "\n Voici la mission spécifique :"
+                f"{mission}"
+                "et la description complète de cette mission point par point :"
+                f"{' - '.join(MISSION_DICT_FR[mission])}"
+                "\n Et voici le document :")]
+            
         temperature = 0    
 
         response = self.custom_prompt_llm_inference.run(text = chunk,
                                                             messages = messages,
                                                             temperature = temperature)
         
-        if response.lower().startswith('yes'):
-
-            logging.info(f"Chunk nb°{nb_chunk} llm inference - mission {mission} step 2/5... ")
-
-            messages = [SystemMessage(content = "You are an extractor algoritm expert. "
-                "On the document, you have to extract some relevant ideas,according to the user demand."
-                "- The extraction must be very close to original document. Stay close to the original document, both in its construction and in the words used. "
-                "- The extraction must be in the same language than the original document."
-                "- Affirm ideas as if they were your own, in a direct style, without any reference to the 'document' or 'the text', etc. "),
-                HumanMessage(content = f"In the following document, extract only those sections that are relevant to the professional field of {FUNCTIONAL_DOMAIN} "
-                f"and that have a significant bearing on the specific professional mission that is {mission} and according to a sustainable development, or ecological point of view, without any reformulation."
-                f"- Focus on just the specific section that's talk about {mission}, not all the document. About 200 words at maximun."
-                " - Include priority some examples, concrete experiments on the field, etc... provided by institutional or corporate, if and only if they are presents in the document. Don't imagine it."
-                " - Don't include a corporate, an institution, or a company that is not present in the original passage"
-                " - If no section is relevant to this professional domain field and this specific mission, just say 'No section found'. "
-                " - And don't forget : no reformulation ! Just the original words or similar words."
-                "Here's the document :")]
-
-            temperature = 0    
-
-            response = self.custom_prompt_llm_inference.run(text = chunk,
-                                                                messages = messages,
-                                                                temperature = temperature)
-            
-            if len(response) > 50:
-            
-                # 2 - Reformulation
-                logging.info(f"Chunk nb°{nb_chunk} llm inference - mission : {mission} - step 3/5... ")
-
-                messages = [SystemMessage(content = "You are a teacher expert, for adult audience."
-                "- Your responses must be in the same language than the original document."
-                "- Affirm ideas as if they were your own, in a direct style, without any reference to the 'document' or 'the text', etc. "),
-                HumanMessage(content = f"Rewrite this passage in a way that is more concise and understandable, with 4-8 sentences or about 80-160 words,"
-                                "but stays as close as possible to the original wording."
-                                "- If the original passage is already concise (less than 4 sentences or less than 160 words), keep the same lenght, just clarify some bit."
-                            " - Include priority some examples, concrete experiments on the field, provided by institutional or corporate, etc. if and only if they are already presents in the original passage. Don't imagine it or take it from another source."
-                            " - Don't talk about a corporate, an institution, or a company that is not present in the original passage."
-                            "Here's the passage :")]
-                
-                temperature = 0
-
-                response = self.custom_prompt_llm_inference.run(text = response,
-                                                                messages = messages,
-                                                                temperature = temperature)
-
-                # 3 - Reformulation
-                logging.info(f"Chunk nb°{nb_chunk} llm inference - mission : {mission} - step 4/5... ")
-
-                messages = [
-                HumanMessage(content = f"You are a traductor expert."
-                "Please, analyse the language of this document :"
-                f" - if it's already in {LANGUAGE}, just say 'No translation to do' "
-                f" - if it is not, please, traduce it in {LANGUAGE}, with a very accurate traduction."
-                    "Don't refer to the original text, don't add any sentences for your own, just return the traduction and that's all.")]
-
-                temperature = 0
-                final_extract = self.custom_prompt_llm_inference.run(text = response,
-                                                                messages = messages,
-                                                                temperature = temperature)
-
-                logging.info(f"Chunk nb°{nb_chunk} llm inference - mission : {mission} - step 5/5... ")
-
-
-                messages = [
-                HumanMessage(content = f"You are an professional expert of {FUNCTIONAL_DOMAIN}"
-                "Please, read this short document and answer to these questions :"
-                f"Do you think this short document gives some concrete ideas to the specific mission {mission}, in the context of the professional field {FUNCTIONAL_DOMAIN} ?"
-                f"Do you think this short document is faithful to the original document, given below ?"
-                f" - Return a score of pertinence between 0 and 1, combined by the two aspects. "
-                f" - If the short document quotes one or any corporate, institution, company that is not quoted in the original document, just return 0.0 as the pertinence score."
-                f" - If the short document is not very faithful to the original document, just return 0.0 as the pertinence score."
-                f" - Don't forget the specific mission is : {mission}:"
-                f" - Here the original document :"
-                f" {chunk} \n"
-                    )]
-
-                temperature = 0
-
-                score_output = self.custom_prompt_llm_inference.run(text = final_extract,
-                                                                messages = messages,
-                                                                temperature = temperature,
-                                                                pydantic_schema = RelevanceScore)
-
-                metadatas_extract = self.enrich_metadatas_layer(doc_type='pertinent_extract',
-                                                    inheritance_metadatas=metadatas_chunk,
-                                                    inheritance_fields_to_exclude=['extract_from', 'professional_functional_area'],
-                                                    reapply_fields_to_root=['professional_functional_area'])
-                
-                metadatas_extract['mission'] = mission
-                metadatas_extract['pertinence_score'] = float(score_output.relevance_score)
-
-                self.all_text.append(final_extract)
-                self.all_metadatas.append(metadatas_extract)
-
-                logging.info(f"Chunk nb°{nb_chunk} llm inference - mission : {mission} - DONE ! ")
-                    
-            else:
-                logging.info(f"Extract not found => skip !...")
+        import pdb
+        pdb.set_trace()
+        
+        if response.lower().startswith('oui') :
+            return True
         else:
-            logging.info(f"No ecology ! => skip !...")
+            return False
 
     
     def run_one_chunk(self, chunk : str, nb_chunk: int, metadatas_entire_doc : dict | None = None):
 
+        missions_list = []
+            
+        for mission in MISSION_DICT_FR.keys() :
+
+            logging.info(f"Chunk nb°{nb_chunk} llm inference - mission {mission} ... ")
+
+            try:
+                mission_ok = self.run_one_mission_inference(chunk=chunk,
+                                               mission=mission)
+                
+                if mission_ok:
+                    missions_list.append(mission)
+                
+            except Exception as e:
+                self.curr_error_list.append(f"Extraction error : chunk n°{nb_chunk} - mission : {mission} - error {e}")
+                pass
+        
         metadatas_chunk = self.enrich_metadatas_layer(doc_type='chunk',
                                                       inheritance_metadatas=metadatas_entire_doc,
                                                       inheritance_fields_to_exclude=['professional_functional_area'],
                                                       reapply_fields_to_root=['professional_functional_area'])
         metadatas_chunk['nb_chunk'] = nb_chunk
+        metadatas_chunk['missions_list'] = missions_list
+
+
+        import pdb
+        pdb.set_trace()
 
         self.all_text.append(chunk)
         self.all_metadatas.append(metadatas_chunk)
-            
-        for mission in MISSION_LIST :
 
-            try:
-                self.run_one_mission_inference(chunk=chunk,
-                                               nb_chunk=nb_chunk,
-                                               mission=mission,
-                                               metadatas_chunk=metadatas_chunk)
-                
-            except Exception as e:
-                self.curr_error_list.append(f"Extraction error : chunk n°{nb_chunk} - mission : {mission} - error {e}")
-                pass
 
     
     def run_one_pdf(self, pdf_path: str) -> None:
@@ -396,14 +397,59 @@ class IndexingPipeline(VectorIndexing):
             self.all_text.append(doc_summarize)
             self.all_metadatas.append(metadatas_ed)
 
+            language = metadatas_ed['language'].lower()
+
+            import pdb
+            pdb.set_trace()
+
             logging.info("Chunks llm inference for this doc :")
             
             for i, chunk in enumerate(chunks):
                 nb_chunk = i + 1
                 try:
-                    self.run_one_chunk(chunk = chunk,
+                    logging.info(f"Chunk nb°{nb_chunk} llm inference - step 1 (Ecological filter).. ")
+
+                    messages = [SystemMessage(content = "You are a scientific expert of questions related to ecology, sustainability and sufficiency. "
+                    "On the document, you have to make a lecture very attentive and critical."
+                    "- Just respond with 'yes' or 'no'"),
+                    HumanMessage(content = f"Is the following passagge have an evident link with sustainability, sufficiency, or an ecological point of view ?"
+                        f"- Just say yes or no."
+                        "Here's the document :")]
+
+                    temperature = 0    
+
+                    response = self.custom_prompt_llm_inference.run(text = chunk,
+                                                            messages = messages,
+                                                            temperature = temperature)
+        
+                    if response.lower().startswith('yes') and nb_chunk > 4 :
+
+                        if language!='french':
+
+                            logging.info(f"Chunk nb°{nb_chunk} llm inference - step 2 - (optional) french traduction... ")
+
+                            messages = [
+                            HumanMessage(content = f"Tu es un expert en traduction française."
+                            "Peux-tu me traduire ce document en Français s'il te plaît, le plus fidèlement possible ?" \
+                            "- Ne fournis que la traduction, rien d'autres, pas de commentaire supplémentaire avant ou après.")]
+
+                            temperature = 0
+                            chunk = self.custom_prompt_llm_inference.run(text = chunk,
+                                                                            messages = messages,
+                                                                            temperature = temperature)
+                        else:
+
+                            logging.info(f"Chunk nb°{nb_chunk} - chunk already in French language (no traduction) ")
+
+
+                        self.run_one_chunk(chunk = chunk,
                                         nb_chunk= nb_chunk,
-                                        metadatas_entire_doc=metadatas_ed)
+                                        metadatas_entire_doc=metadatas_ed)      
+                        
+                    else:
+                        logging.info(f"No ecology int this chunk ! => skip !...")
+
+
                 except Exception as e:
                     self.curr_error_list.append(f"Extraction error : chunk n°{nb_chunk} - error {e}")
                     raise ExtractionError(f"Extraction error (functional) : chunk n°{nb_chunk} - error {e}")
