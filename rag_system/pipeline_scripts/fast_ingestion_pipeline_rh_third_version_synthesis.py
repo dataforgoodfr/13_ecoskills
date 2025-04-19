@@ -4,6 +4,8 @@ import argparse
 from datetime import datetime
 import time
 
+from pathlib import Path
+
 from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices import VectorIndexing
@@ -18,6 +20,10 @@ from taxonomy.document import EntireDocument
 from ingestion_manager.ingestion_manager import IngestionManager
 
 from kotaemon.base.schema import HumanMessage, SystemMessage
+
+from ktem.db.models import engine
+from sqlalchemy.orm import Session
+from ktem.index.file.index import FileIndex
 
 from pydantic import BaseModel
 
@@ -165,7 +171,7 @@ class RelevanceScore(BaseModel):
 class ExtractionError(Exception):
     pass
 
-class IndexingPipeline(VectorIndexing):
+class IndexingPipelineShortCut(VectorIndexing):
 
     # --- Different blocks (pipeline blocks library) --- 
 
@@ -200,6 +206,16 @@ class IndexingPipeline(VectorIndexing):
 
     # --- Final Kotaemon ingestion ----
 
+    file_index_associated = FileIndex(app=None,
+                            id= 1,
+                            name= 'ecoskills_rh',
+                            config= {
+                                'embedding': 'default',
+                                'supported_file_types': '.png, .jpeg, .jpg, .tiff, .tif, .pdf, .xls, .xlsx, .doc, .docx, .pptx, .csv, .html, .mhtml, .txt, .md, .zip', 'max_file_size': 1000, 'max_number_of_files': 0, 'private': True, 'chunk_size': 0, 'chunk_overlap': 0})
+
+    file_index_associated.on_start()
+
+    """
     vector_store: QdrantVectorStore = Param(
         lazy(QdrantVectorStore).withx(
             url=f"http://{qdrant_host}:6333",
@@ -215,6 +231,7 @@ class IndexingPipeline(VectorIndexing):
         ),
         ignore_ui=True,
     )
+    """
     embedding: OpenAIEmbeddings = Param(
         lazy(OpenAIEmbeddings).withx(
             # base_url="http://172.17.0.1:11434/v1/",
@@ -228,6 +245,10 @@ class IndexingPipeline(VectorIndexing):
     pdf_path: str
 
     ingestion_manager : IngestionManager = None
+
+    index_table : None
+    source_table : None
+    collection_name : None
     
     # Buffer (for one pdf doc)
     all_text: list = []
@@ -567,6 +588,211 @@ class IndexingPipeline(VectorIndexing):
         return None
     
 
+
+    
+    def get_resources_set_up(self):
+
+        self.vector_store = self.file_index_associated._vs
+        self.doc_store = self.file_index_associated._docstore
+        self.index_table = self.file_index_associated._resources.get('Index')
+        self.source_table = self.file_index_associated._resources.get('Source')
+        self.collection_name = f"index_{self.file_index_associated.id}"
+
+
+    
+    def handle_chunks_docstore(self, chunks, file_id):
+        """Run chunks"""
+        # run embedding, add to both vector store and doc store
+        self.add_to_docstore(chunks)
+
+        # record in the index
+        with Session(engine) as session:
+            nodes = []
+            for chunk in chunks:
+
+                nodes.append(
+                    self.index_table(
+                        source_id=file_id,
+                        target_id=chunk.doc_id,
+                        relation_type="document",
+                    )
+                )
+            session.add_all(nodes)
+            session.commit()
+
+    def handle_chunks_vectorstore(self, chunks, file_id, metadatas):
+        """Run chunks"""
+        # run embedding, add to both vector store and doc store
+        self.add_to_vectorstore(chunks, metadatas)
+        self.write_chunk_to_file(chunks)
+
+        if self.VS:
+            # record in the index
+            with Session(engine) as session:
+                nodes = []
+                for chunk in chunks:
+                    nodes.append(
+                        self.index_table(
+                            source_id=file_id,
+                            target_id=chunk.doc_id,
+                            relation_type="vector",
+                        )
+                    )
+                session.add_all(nodes)
+                session.commit()
+
+
+    def handle_docs(self, docs, file_id, file_name):
+        s_time = time.time()
+        text_docs = []
+        non_text_docs = []
+        thumbnail_docs = []
+
+      
+        for chunk in chunk:
+            self.handle_chunks_docstore(chunks, file_id)
+            n_chunks += len(chunks)
+            yield Document(
+                f" => [{file_name}] Processed {n_chunks} chunks",
+                channel="debug",
+            )
+
+        def insert_chunks_to_vectorstore():
+            chunks = []
+            n_chunks = 0
+            chunk_size = self.chunk_batch_size
+            for start_idx in range(0, len(to_index_chunks), chunk_size):
+                chunks = to_index_chunks[start_idx : start_idx + chunk_size]
+                metadatas = to_index_metadatas[start_idx : start_idx + chunk_size]
+                self.handle_chunks_vectorstore(chunks, file_id, metadatas)
+                n_chunks += len(chunks)
+                if self.VS:
+                    yield Document(
+                        f" => [{file_name}] Created embedding for {n_chunks} chunks",
+                        channel="debug",
+                    )
+
+        # run vector indexing in thread if specified
+        if self.run_embedding_in_thread:
+            print("Running embedding in thread")
+            threading.Thread(
+                target=lambda: list(insert_chunks_to_vectorstore())
+            ).start()
+        else:
+            yield from insert_chunks_to_vectorstore()
+
+        print("indexing step took", time.time() - s_time)
+        return n_chunks
+    
+
+    def get_id_if_exists(self, file_path: str | Path) -> Optional[str]:
+        """Check if the file is already indexed
+
+        Args:
+            file_path: the path to the file
+
+        Returns:
+            the file id if the file is indexed, otherwise None
+        """
+        file_name = file_path.name if isinstance(file_path, Path) else file_path
+        if self.private:
+            cond: tuple = (
+                self.Source.name == file_name,
+                self.Source.user == self.user_id,
+            )
+        else:
+            cond = (self.Source.name == file_name,)
+
+        with Session(engine) as session:
+            stmt = select(self.Source).where(*cond)
+            item = session.execute(stmt).first()
+            if item:
+                return item[0].id
+
+        return None
+
+
+
+    def store_file(self, file_path: Path) -> str:
+        """Store file into the database and storage, return the file id
+
+        Args:
+            file_path: the path to the file
+
+        Returns:
+            the file id
+        """
+        with file_path.open("rb") as fi:
+            file_hash = sha256(fi.read()).hexdigest()
+
+        shutil.copy(file_path, self.FSPath / file_hash)
+        source = self.source_table(
+            name=file_path.name,
+            path=file_hash,
+            size=file_path.stat().st_size,
+            user=self.user_id,  # type: ignore
+        )
+        with Session(engine) as session:
+            session.add(source)
+            session.commit()
+            file_id = source.id
+
+        return file_id
+    
+
+    
+    def run_one_file(self, file_path: Path, reindex: bool = False):
+    # check if the file is already indexed
+
+        file_path = file_path.resolve()
+
+        file_id = self.get_id_if_exists(file_path)
+
+        if file_id is not None:
+            if not reindex:
+                raise ValueError(
+                    f"File {file_path.name} already indexed. Please rerun with "
+                    "reindex=True to force reindexing."
+                )
+            else:
+                # remove the existing records
+                self.delete_file(file_id)
+                file_id = self.store_file(file_path)
+        else:
+            # add record to db
+            file_id = self.store_file(file_path)
+
+
+        extra_info = {"file_name": file_path}
+        file_name = file_path.name
+        extra_info["file_id"] = file_id
+        extra_info["collection_name"] = self.collection_name
+
+        import pdb
+        pdb.set_trace()
+
+        docs = self.loader.load_data(file_path, extra_info=extra_info)
+        self.handle_docs(docs, file_id, file_name)
+
+    def run_all_files(self, reindex: bool = False):
+
+        target_folder = pathlib.Path(indexing_pipeline.pdf_path)
+
+        for file in target_folder.iterdir():
+            file_str = file.as_posix().split('/')[-1]
+
+            try:
+
+                if not file.is_dir():
+                    if file_str.endswith(".pdf"):
+
+                        self.run_one_file(file_path=file, reindex=reindex)
+
+            except Exception as e:
+                print(e)
+                raise Exception(f"{e}")
+
+
 if __name__ == "__main__":
 
 
@@ -575,7 +801,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    indexing_pipeline = IndexingPipeline(pdf_path=PDF_FOLDER)
-    indexing_pipeline._link_to_a_pdf_manager()
+    indexing_pipeline = IndexingPipelineShortCut(pdf_path=PDF_FOLDER)
 
-    indexing_pipeline.run(retry_pdf_error=args.retry_error, force_reindex=args.force_reindex)
+    indexing_pipeline.get_resources_set_up()
+
+    indexing_pipeline.run_all_files(reindex=args.force_reindex)
+
+    #indexing_pipeline._link_to_a_pdf_manager()
+
+    #indexing_pipeline.run(retry_pdf_error=args.retry_error, force_reindex=args.force_reindex)
