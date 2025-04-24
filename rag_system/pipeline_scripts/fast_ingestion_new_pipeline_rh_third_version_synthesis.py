@@ -11,22 +11,17 @@ from kotaemon.base import Param, lazy, Document
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices import VectorIndexing
 from kotaemon.llms.chats.openai import ChatOpenAI
-from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
+from kotaemon.llms.chats.langchain_based import LCChatMistral
 
 from llama_index.core.readers.file.base import default_file_metadata_func
-from llama_index.core.readers.base import BaseReader
 
 from pipelineblocks.extraction.pdfextractionblock.pdf_to_markdown import PdfExtractionToMarkdownBlock
 from pipelineblocks.llm.ingestionblock.openai import OpenAIMetadatasLLMInference, OpenAICustomPromptLLMInference
-
+from pipelineblocks.llm.ingestionblock.langchain import LangChainMetadatasLLMInference, LangChainCustomPromptLLMInference
 from taxonomy.document import EntireDocument
-from ingestion_manager.ingestion_manager import IngestionManager
 
 from kotaemon.base.schema import HumanMessage, SystemMessage
 
-from ktem.db.models import engine
-from sqlalchemy.orm import Session
 from ktem.index.file.index import FileIndex
 from ktem.index.file.pipelines import IndexPipeline
 
@@ -35,6 +30,10 @@ from kotaemon.loaders import PDFThumbnailReader
 from kotaemon.indices.splitters import TokenSplitter
 
 from pydantic import BaseModel
+
+from enum import Enum
+
+from prompts_rh.missions import STRUCTURED_MISSION_DICT
 
 
 LOG_LEVEL = logging.INFO
@@ -65,13 +64,10 @@ parser = argparse.ArgumentParser(
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
-LANGUAGE = 'French'
-
-DOCSTORE_PATH = "/app/ktem_app_data/user_data/docstore"
-COLLECTION_ID = 7
+COLLECTION_ID = 8
 USER_ID = '2bd87cee60a5430ca23c84ee80d81cfa'
 
-PDF_FOLDER = "./data_pdf/test"
+PDF_FOLDER = "./data_pdf/academic_lit"
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
@@ -82,62 +78,29 @@ METADATA_BASE = {
 }
 
 CHUNK_SIZE = 600
-CHUNK_OVERLAP = 150
+CHUNK_OVERLAP = 100
 
-MISSION_DICT_FR = {
-    "Définir, piloter et mettre en œuvre la stratégie RH": [
-        "Élaborer, conduire et évaluer la politique RH, en cohérence avec les orientations nationales et les priorités de la structure.",
-        "Définir les plans d'action stratégiques en matière de recrutement, GPEEC, mobilité, formation, qualité de vie au travail, communication, conditions de travail, diversité et politique managériale.",
-        "Conduire le changement et accompagner les évolutions organisationnelles, culturelles et technologiques de l'administration."
-    ],
-    "Gérer les parcours, les emplois et les compétences": [
-        "Mettre en œuvre la gestion prévisionnelle des effectifs, des emplois et des compétences (GPEEC).",
-        "Analyser les besoins actuels et futurs, cartographier les compétences, identifier les viviers et les métiers sensibles.",
-        "Conseiller les agents dans la construction de leur parcours professionnel, accompagner les mobilités, les reconversions, les transitions professionnelles, et les secondes parties de carrière.",
-        "Participer aux revues de cadres, à la constitution de viviers de talents, et à l'animation des réseaux professionnels."
-    ],
-    "Recruter, intégrer et fidéliser les agents": [
-        "Organiser les campagnes de recrutement externe et interne, concevoir les dispositifs d'intégration et de suivi (onboarding).",
-        "Accompagner les managers dans la définition des besoins en recrutement.",
-        "Promouvoir la marque employeur et développer les partenariats pour le sourcing (forums, réseaux, apprentissage).",
-        "Mettre en œuvre les concours et examens professionnels, en garantissant la sécurité juridique et l'équité des processus."
-    ],
-    "Accompagner les personnes et les collectifs de travail": [
-        "Conseiller les agents et les services en matière RH (carrière, mobilité, retraite, formation, management).",
-        "Réaliser des entretiens individualisés, animer des actions collectives de développement professionnel.",
-        "Proposer des dispositifs d'accompagnement : coaching, conseil RH de proximité, soutien à la professionnalisation des pratiques managériales.",
-        "Assurer l'accueil, l'écoute, la médiation et l'orientation vers les ressources adaptées."
-    ],
-    "Assurer la gestion administrative, statutaire et la paie": [
-        "Gérer les actes administratifs : positions, contrats, retraites, promotions, cessations de fonction.",
-        "Assurer le traitement, la vérification et la fiabilisation des rémunérations, primes et cotisations sociales.",
-        "Suivre les absences, le temps de travail, les congés, le télétravail.",
-        "Gérer les procédures de contentieux et les dossiers individuels sensibles dans le respect du cadre réglementaire."
-    ],
-    "Piloter le dialogue social et la qualité de vie au travail": [
-        "Organiser les élections professionnelles, les instances de dialogue social et les négociations collectives.",
-        "Préparer les ordres du jour, assurer le secrétariat et le suivi des décisions des instances représentatives.",
-        "Prévenir et gérer les conflits collectifs et individuels, produire des notes d'analyse du climat social.",
-        "Élaborer et mettre en œuvre les politiques de prévention des risques professionnels et psychosociaux, en lien avec les services compétents (DUERP, plans d’action, accompagnement des acteurs)."
-    ],
-    "Développer les outils, les données et les systèmes d'appui RH": [
-        "Concevoir et piloter les systèmes d'information RH (SIRH), produire les données sociales et les indicateurs (RSU, DOETH, bilans, tableaux de bord).",
-        "Appuyer la décision stratégique via l'analyse des données RH (emploi, masse salariale, diversité, égalité professionnelle).",
-        "Contribuer à la transformation numérique des fonctions RH et au développement d'une gestion fondée sur les données (data RH).",
-        "Participer à la veille réglementaire, technologique et sociétale sur les évolutions du métier RH."
-    ]
-}
+EXTRA_MAX_RETRIES = 6
+DELAY_BETWEEN_REQUEST = 1 #seconds
 
 
 # ---- Do not touch (temporary) ------------- #
 
 ollama_host = '172.17.0.1' if OLLAMA_DEPLOYMENT == 'docker' else 'localhost'
-qdrant_host = '172.17.0.1' if VECTOR_STORE_DEPLOYMENT == 'docker' else 'localhost'
+# qdrant_host = '172.17.0.1' if VECTOR_STORE_DEPLOYMENT == 'docker' else 'localhost' -- now, defined in flowsettings.py
 
 
 class RelevanceScore(BaseModel):
     relevance_score : float
 
+
+class Reponse(str, Enum):
+    oui = 'Oui'
+    non = 'Non'
+
+class ResponseWithJustification(BaseModel):
+    reponse : Reponse
+    justification : str
 
 class ExtractionError(Exception):
     pass
@@ -151,27 +114,34 @@ class IndexingPipelineShortCut(IndexPipeline):
         )
     )
 
+    """
+    llm = ChatOpenAI(
+                base_url=f"http://{ollama_host}:11434/v1/",
+                model="gemma3:4b-large-context",
+                api_key="ollama",
+                )"""
+
     # --- LLM MODELS ---
     # At least, one taxonomy = one llm_inference_block
     # (Multiply the number of llm_inference_block when you need handle more than one taxonomy
-    metadatas_llm_inference_block_entire_doc : OpenAIMetadatasLLMInference = Param(
-        lazy(OpenAIMetadatasLLMInference).withx(
-            llm = ChatOpenAI(
-                base_url=f"http://{ollama_host}:11434/v1/",
-                model="gemma2:2b",
-                api_key="ollama",
+    metadatas_llm_inference_block_entire_doc : LangChainMetadatasLLMInference = Param(
+        lazy(LangChainMetadatasLLMInference).withx(
+            llm = LCChatMistral(
+                model="open-mistral-nemo",
+                mistral_api_key="mHJJoBJzKeWylZs28Iy9aTqIxADTD5zK",
+                temperature=0
                 ),
             taxonomy = EntireDocument,
             language = 'French'
             )
     )
 
-    custom_prompt_llm_inference : OpenAICustomPromptLLMInference = Param(
-        lazy(OpenAICustomPromptLLMInference).withx(
-            llm = ChatOpenAI(
-                base_url=f"http://{ollama_host}:11434/v1/",
-                model="gemma2:2b",
-                api_key="ollama",
+    custom_prompt_llm_inference : LangChainCustomPromptLLMInference = Param(
+        lazy(LangChainCustomPromptLLMInference).withx(
+            llm = LCChatMistral(
+                model="open-mistral-nemo",
+                mistral_api_key="mHJJoBJzKeWylZs28Iy9aTqIxADTD5zK",
+                temperature=0.1
                 ))
     )
 
@@ -285,71 +255,110 @@ class IndexingPipelineShortCut(IndexPipeline):
     
 
     def run_one_mission_inference(self, chunk : str, mission: str):
-
-        messages = [SystemMessage(content = f"Tu es un lecteur expert du domaine professionnel : {FUNCTIONAL_DOMAIN}."
-                "Sur ce document, tu dois faire une lecture très attentive et méticuleuse."
-                "- Réponds seulement par 'oui' ou 'non' "),
-                HumanMessage(content = f"Est-ce que le document suivant peut m'aider d'une manière ou d'une autre à conceptualiser ou " 
-                "à réaliser la mission spécifique suivante dans le concret, dans l'optique de développement durable ou à l'écologie au sein de cette mission spécifique. "
-                f"- Réponds seulement par 'oui' ou 'non' "
-                "- si tu réponds 'oui' cela veut dire que le document est très en lien, et de manière très pertinente, avec la mission spécifique suivante."
-                "\n Voici la mission spécifique :"
-                f"{mission}"
-                "et la description complète de cette mission point par point :"
-                f"{' - '.join(MISSION_DICT_FR[mission])}"
-                "\n Et voici le document :")]
-            
-        temperature = 0    
-
-        response = self.custom_prompt_llm_inference.run(text = chunk,
-                                                            messages = messages,
-                                                            temperature = temperature)
         
-        if response.lower().startswith('oui') :
-            return True
-        else:
-            return False
+        sub_missions_descr = '\n - '.join(STRUCTURED_MISSION_DICT[mission]['sub_missions'])
+
+        human_message_content = f"""On cherche à savoir si le document aide **concrètement** à satisfaire
+                                la mission spécifique suivante du domaine {FUNCTIONAL_DOMAIN},
+                                **dans une perspective de transition écologique, de développement durable ou de solution face aux problèmes de climat.**.
+                                 \n\n Mission spécifique ciblée : {mission}.
+                                 Cela inclut : {sub_missions_descr}
+                                \n\n Ta réponse doit être structurée avec un format json comme ceci: {{'reponse': 'Oui'/'Non', 'justification': [...] }}.
+                                Le critère principal est la **présence de leviers mis en œuvre ou outillés**, c'est-à-dire
+                                d'expériences concrètes terrains ou métiers, en rapport avec le domaine profesionnel et la mission.
+                                \n\n --- \n """
+        
+        for i, example_dict in enumerate(STRUCTURED_MISSION_DICT[mission]['examples']):
+            expected_resp = example_dict['response']
+            justif = example_dict['justification']
+            doc = example_dict['document']
+            human_message_content += f"""\n **Example {i + 1}** 
+                                        \n document : {doc}
+                                        \n Réponse attendue :
+                                         \n {{ 'reponse' : {expected_resp} \n 'justification' : {justif} }} \n --- \n """
+            
+        human_message_content += f""" **Maintenant, analyse le document suivant :**
+                                    \n Réponds avec un format json comme ceci: {{'reponse': 'Oui'/'Non', 'justification': [...] }} \n 
+                                    \n Voici le document : {chunk}"""
+
+
+        messages = [
+                    SystemMessage(content = f"Tu es un assistant spécialisé dans l’évaluation fine des documents." 
+                                  "Ta tâche est de déterminer si un document est **pertinent** pour "
+                                  f"une **mission professionnelle spécifique du domaine {FUNCTIONAL_DOMAIN},"
+                                  "en justifiant rigoureusement ta réponse par des critères concrets."
+                                    ),
+                    HumanMessage(content = human_message_content)]
+            
+        temperature = 0
+
+        response = self.custom_prompt_llm_inference.run(messages = messages,
+                                                        temperature = temperature,
+                                                        language = 'French',
+                                                        pydantic_schema = ResponseWithJustification,
+                                                        extra_max_retries = EXTRA_MAX_RETRIES)
+        
+        return response
 
     
-    def inference_on_one_chunk(self, chunk : str, nb_chunk: int, metadatas_entire_doc : dict | None = None):
+    def inference_on_one_chunk(self, chunk : str, nb_chunk: int):
 
         missions_list = []
+        missions_justification_answers = {}
+        extraction_error = {}
             
-        for mission in MISSION_DICT_FR.keys() :
+        for mission in STRUCTURED_MISSION_DICT.keys() :
 
             logging.info(f"Chunk nb°{nb_chunk} llm inference - mission {mission} ... ")
 
             try:
-                mission_ok = self.run_one_mission_inference(chunk=chunk,
+                response = self.run_one_mission_inference(chunk=chunk,
                                                mission=mission)
-                
-                if mission_ok:
+
+                time.sleep(DELAY_BETWEEN_REQUEST) # to not excedding request time
+               
+                if response and response.get('reponse').lower()=='oui':
+                    logging.info("relevant mission !...")
                     missions_list.append(mission)
+                    missions_justification_answers[mission] = response
+
+                elif response:
+                    logging.info("non relevant mission...")
+                    missions_justification_answers[mission] = response
+
+                else:
+                    logging.warning("Empty response ?")
+                    extraction_error[mission] = "Error : empty response"
                 
             except Exception as e:
                 logging.info(f"Extraction error : chunk n°{nb_chunk} - mission : {mission} - error {e}")
+                extraction_error[mission] = f"{e}"
                 pass
+
+        return missions_list, missions_justification_answers, extraction_error
         
-        metadatas_chunk = self.enrich_metadatas_layer(doc_type='chunk',
-                                                      inheritance_metadatas=metadatas_entire_doc,
-                                                      inheritance_fields_to_exclude=['professional_functional_area', 'doc_type'],
-                                                      reapply_fields_to_root=['professional_functional_area'])
-        metadatas_chunk['nb_chunk'] = nb_chunk
-        metadatas_chunk['missions_list'] = missions_list
-
-
-        return metadatas_chunk
-    
 
     def inference_and_summarize_entire_doc(self, entire_text: str, metadata_vs_base: dict | None = None):
 
-        entire_doc_metadatas = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
+        metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
                                                             doc_type  = 'entire_doc', 
                                                             inference_type = 'generic')
         
+        if not isinstance(metadatas_ed, dict):
+            for i in range(2):
+                lenght_et = len(entire_text)
+                entire_text = entire_text[lenght_et // 3 : - lenght_et // 3]
+                logging.warning(f"Failed summarization & metadatas inference on entire doc - lenght {lenght_et} letters. Retry with lenght {len(entire_text)} letters...")
+                metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
+                                                            doc_type  = 'entire_doc', 
+                                                            inference_type = 'generic')
+                
+        if not isinstance(metadatas_ed, dict):
+            raise RuntimeError("Failed summarization inference & metadatas for this doc...")
+        
         logging.info("LLM metadatas inference (on entire doc)... ok.")
 
-        metadatas_ed = entire_doc_metadatas.model_dump(mode='json')
+        #metadatas_ed = entire_doc_metadatas.model_dump(mode='json')
 
         metadatas_ed['doc_type'] = 'entire_doc_summary'
 
@@ -378,53 +387,76 @@ class IndexingPipelineShortCut(IndexPipeline):
             logging.info("Chunks llm inference for this doc :")
             
             for i, chunk in enumerate(chunks):
-                nb_chunk = i + 1
-                try:
-                    logging.info(f"Chunk nb°{nb_chunk} llm inference - step 1 (Ecological filter).. ")
+                
+                # Prepare metadatas base for this chunk :
+                metadata_chunk = self.enrich_metadatas_layer(doc_type='chunk',
+                                                      inheritance_metadatas=metadata_entire_doc,
+                                                      inheritance_fields_to_exclude=['professional_functional_area', 'doc_type'],
+                                                      reapply_fields_to_root=['professional_functional_area'])
+                
+                metadata_chunk = self.concat__metadatas_layer(metadatas_base=metadata_chunk, metadatas_root=metadata_vs_base)
+                nb_chunk = i + 1 
+                metadata_chunk['nb_chunk'] = nb_chunk
 
-                    messages = [SystemMessage(content = "You are a scientific expert of questions related to ecology, sustainability and sufficiency. "
-                    "On the document, you have to make a lecture very attentive and critical."
-                    "- Just respond with 'yes' or 'no'"),
-                    HumanMessage(content = f"Is the following passagge have an evident link with sustainability, sufficiency, or an ecological point of view ?"
-                        f"- Just say yes or no."
+                try:
+                    #logging.info(f"Chunk nb°{nb_chunk} llm inference - step 1 (Ecological filter).. ")
+
+                    """messages = [SystemMessage(content = "You are a document evaluation assistant."),
+                    HumanMessage(content = f"Is the following document is even remotely related to the theme of ecology, sufficiency, sustainability, environment ... ?"
+                        f"- Your answer must be structured with a true affirmative response for 'Yes' or false affirmative response for 'No', with a precise justification."
                         "Here's the document :")]
 
-                    temperature = 0    
+                    temperature = 0 
 
                     response = self.custom_prompt_llm_inference.run(text = chunk,
                                                             messages = messages,
-                                                            temperature = temperature)
+                                                            temperature = temperature,
+                                                            pydantic_schema = ResponseWithJustification)
+                    
+                    import pdb
+                    pdb.set_trace()
+                    
         
-                    if response.lower().startswith('yes'):
+                    if response.get('affirmative_response'):
 
-                        if language!='french':
+                        metadata_chunk['is_about_ecology'] = True
+                        metadata_chunk['is_about_ecology_justification'] = response.get('justification', 'No justification provided')
+                        """
+                    logging.info(f"Chunk nb°{nb_chunk} llm inference - step 2 - (optional) french traduction... ")
 
-                            logging.info(f"Chunk nb°{nb_chunk} llm inference - step 2 - (optional) french traduction... ")
+                    if language.lower() != 'french':
 
-                            messages = [
-                            HumanMessage(content = f"Tu es un expert en traduction française."
-                            "Peux-tu me traduire ce document en Français s'il te plaît, le plus fidèlement possible ?" \
-                            "- Ne fournis que la traduction, rien d'autres, pas de commentaire supplémentaire avant ou après.")]
+                        messages = [
+                        SystemMessage(content = "Tu es un expert en traduction française."),
+                        HumanMessage(content = "Dans le cas où le document suivant ne soit pas déjà en français, peux-tu me traduire ce document en Français s'il te plaît, le plus fidèlement possible ?" \
+                        "- Ne fournis que la traduction, rien d'autres, pas de commentaire supplémentaire avant ou après." \
+                        f"\n Voici le document : \n {chunk}")]
 
-                            temperature = 0
-                            chunk = self.custom_prompt_llm_inference.run(text = chunk,
-                                                                            messages = messages,
-                                                                            temperature = temperature)
-                        else:
+                        temperature = 0
+                        trad = self.custom_prompt_llm_inference.run(messages = messages,
+                                                                    temperature = temperature,
+                                                                    language='French')
+                        chunk.text = trad
 
-                            logging.info(f"Chunk nb°{nb_chunk} - chunk already in French language (no traduction) ")
-
-
-                        metadata_chunk = self.inference_on_one_chunk(chunk = chunk,
-                                        nb_chunk= nb_chunk,
-                                        metadatas_entire_doc=metadata_entire_doc)
-                        
-                        metadata_chunk = self.concat__metadatas_layer(metadatas_base=metadata_chunk, metadatas_root=metadata_vs_base)
-
-                        all_metadatas.append(metadata_chunk)   
-                        
+                        logging.info(f"French traduction done. ")
+                    
                     else:
-                        logging.info(f"No ecology int this chunk ! => skip !...")
+                        logging.info(f"- No traductino required (doc already in French)...")
+
+
+                    missions_list, mission_justifications_answers, extraction_error = self.inference_on_one_chunk(chunk = chunk,
+                                    nb_chunk= nb_chunk)
+                    
+                    
+                    metadata_chunk['missions_list'] = missions_list
+                    metadata_chunk['missions_justifications'] = mission_justifications_answers
+                    metadata_chunk['extraction_error'] = extraction_error
+                    
+                    """else:
+                        logging.info(f"No ecology int this chunk ! => skip to the next chunk !...")
+                        metadata_chunk['is_about_ecology'] = False"""
+            
+                    all_metadatas.append(metadata_chunk)
 
                 except Exception as e:
                     logging.warning(f"Extraction error : chunk n°{nb_chunk} - error {e}")
@@ -487,6 +519,9 @@ class IndexingPipelineShortCut(IndexPipeline):
         text_vs_metadatas = self.inference_on_all_chunks(chunks=all_chunks,
                                                                 metadata_vs_base=METADATA_BASE,
                                                                 metadata_entire_doc = metadatas_entire_doc)
+        
+        if len(text_vs_metadatas) != len(all_chunks):
+            raise ExtractionError("Error : len(text_vs_metadatas) != len(all_chunks)")
 
         # ------------ END CUSTOM LOGIC ---------------------
 
@@ -497,7 +532,7 @@ class IndexingPipelineShortCut(IndexPipeline):
         to_index_chunks = all_chunks + non_text_docs + thumbnail_docs + [summary]
         to_index_metadatas = text_vs_metadatas + other_vs_metadatas + [metadatas_entire_doc]
 
-        logging.info(f"Got {len(thumbnail_docs)} text chunks - {len(thumbnail_docs)} page thumbnails - {len(non_text_docs)} other type chunks - 1 summary")
+        logging.info(f"Got {len(all_chunks)} text chunks - {len(thumbnail_docs)} page thumbnails - {len(non_text_docs)} other type chunks - 1 summary")
         logging.info(f"And {len(to_index_metadatas)} metadatas list to index.")
 
         # /// DOC STORE Ingestion 
@@ -569,6 +604,8 @@ class IndexingPipelineShortCut(IndexPipeline):
                 # add record to db
                 file_id = self.store_url(file_path)
 
+        logging.info(f"**** Document extraction : {str(file_path)}. ****")
+
         # extract the file
         if isinstance(file_path, Path):
             extra_info = default_file_metadata_func(str(file_path))
@@ -589,9 +626,9 @@ class IndexingPipelineShortCut(IndexPipeline):
 
     
 
-    def run_all_files(self, reindex: bool = False):
+    def run_all_files(self, reindex: bool = False, just_one_file: str | None = None):
 
-        target_folder = pathlib.Path(indexing_pipeline.pdf_path)
+        target_folder = pathlib.Path(self.pdf_path)
 
         for file in target_folder.iterdir():
             file_str = file.as_posix().split('/')[-1]
@@ -599,8 +636,11 @@ class IndexingPipelineShortCut(IndexPipeline):
             try:
 
                 if not file.is_dir():
-                    if file_str.endswith(".pdf"):
 
+                    if just_one_file is not None and file_str==just_one_file:
+                        self.run_one_file(file_path=file, reindex=reindex)
+
+                    elif just_one_file is None and file_str.endswith(".pdf"):
                         self.run_one_file(file_path=file, reindex=reindex)
 
             except Exception as e:
@@ -612,7 +652,7 @@ if __name__ == "__main__":
 
 
     parser.add_argument('-fr','--force_reindex', action="store_true", help='Force to reindex all the pdf files in the folder')           
-    parser.add_argument('-re', '--retry_error', action="store_true", help='Retry ingestion all the pdf files with error status')      
+    parser.add_argument('-jof', '--just_one_file', type=str, help='Retry ingestion all the pdf files with error status')      
 
     args = parser.parse_args()
 
@@ -620,4 +660,4 @@ if __name__ == "__main__":
 
     indexing_pipeline.get_resources_set_up()
 
-    indexing_pipeline.run_all_files(reindex=args.force_reindex)
+    indexing_pipeline.run_all_files(reindex=args.force_reindex, just_one_file=args.just_one_file)
