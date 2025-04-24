@@ -73,7 +73,7 @@ class OpenAICustomPromptLLMInference(CustomPromptLLMInfBlock):
     def run(self, text : str,  messages, temperature : int = 0.3, language : str = 'English', pydantic_schema : BaseModel | None = None) -> BaseModel | str:
 
         if language != "English":
-            system_message = self._build_a_system_message_to_force_language(language=self.language)
+            system_message = self._build_a_system_message_to_force_language(language=language)
             messages = [system_message, *messages, HumanMessage(content=f"\n {text} \n")]
         else:
             messages = [*messages, HumanMessage(content=f"\n {text} \n")]
