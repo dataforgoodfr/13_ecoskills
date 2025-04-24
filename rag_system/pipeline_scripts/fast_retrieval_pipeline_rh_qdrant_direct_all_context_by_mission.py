@@ -9,6 +9,8 @@ from kotaemon.storages import LanceDBDocumentStore
 from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 
+from prompts_rh.missions import STRUCTURED_MISSION_DICT
+
 LOG_LEVEL = logging.INFO
 # When you set the level, all messages from a higher level of severity are also
 # logged. For example, when you set the log level to `INFO`, all `WARNING`,
@@ -31,16 +33,6 @@ logging.basicConfig(
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
-MISSION_LIST = [
-            "Élaborer la politique et la stratégie RH, en cohérence avec les orientations nationales et les priorités de la structure",
-            "Gérer les parcours, les emplois et les compétences du personnel, notamment en fonctions des besoins prévisionnels de la structure",
-            "Recruter et intégrer les nouveaux candidats, par des campagnes de recrutement externe et interne, la mise en place des examens.",
-            "Accompagner les personnes et les collectifs de travail (carrière, mobilité, retraite, formation, management).",
-            "Assurer la gestion administrative, statutaire et la paie",
-            "Piloter le dialogue social et la qualité de vie au travail, ainsi la prévention des risques professionnels et psychosociaux",
-            "Développer les outils, les systèmes d'analyses de données et les systèmes d'appui RH "
-        ]
-
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
@@ -56,6 +48,14 @@ COLLECTION_NAME= 'index_1' # Check here your collection throught QDRANT Database
 
 ollama_host = '172.17.0.1' if OLLAMA_DEPLOYMENT == 'docker' else 'localhost'
 qdrant_host = '172.17.0.1' if VECTOR_STORE_DEPLOYMENT == 'docker' else 'localhost'
+
+class Reponse(str, Enum):
+    oui = 'Oui'
+    non = 'Non'
+
+class ResponseWithJustification(BaseModel):
+    reponse : Reponse
+    justification : str
 
 
 class RetrievalPipeline(VectorRetrieval):
@@ -90,7 +90,7 @@ class RetrievalPipeline(VectorRetrieval):
 
     llm: ChatOpenAI = ChatOpenAI.withx(
         base_url=f"http://{ollama_host}:11434/v1/",
-        model="gemma3:4b",
+        model="gemma3:12b-large-context",
         api_key="ollama"
     )
 
@@ -133,13 +133,34 @@ class RetrievalPipeline(VectorRetrieval):
         
         #TODO loop on each missions
 
-        for mission in MISSION_LIST:
+        for mission in STRUCTURED_MISSION_DICT:
 
             print("----------")
             print(f"Mission : {mission}")
             print("----------")
 
-            first_query = "Selon"
+            first_query = "no query"
+
+            
+
+            first_query = "no query"
+
+            all_context = []
+            print("Raw retrieval context : ")
+
+            scores_ki, texts_ki = self.run_one_generic_request(first_query, nb_results=99999, metadatas_filters={"doc_type": "chunk",
+                                                                                                           "missions_list[]" : mission,
+                                                                                                           })
+
+            print("Key Idea : ")
+            print(f"Associated scores : {scores_ki}")
+
+            import pdb
+            pdb.set_trace()
+            
+            for text in texts_ki:
+                all_context.append(text)
+
 
             query = f""" Je travaille dans le domaine de {FUNCTIONAL_DOMAIN}. \n
                 A partir du corpus de documents suivant, répond par une fiche pratique clair et argumentée à la question suivante :
@@ -153,22 +174,6 @@ class RetrievalPipeline(VectorRetrieval):
                 Voici le corpus de documents comme contexte pour ta réponse : \n"""
             print("Query :")
             print(query)
-
-            all_context = []
-            print("Raw retrieval context : ")
-
-            scores_ki, texts_ki = self.run_one_generic_request(first_query, nb_results=99999, metadatas_filters={"doc_type": "pertinent_extract",
-                                                                                                           "mission" : mission,
-                                                                                                           })
-
-            print("Key Idea : ")
-            print(f"Associated scores : {scores_ki}")
-
-            import pdb
-            pdb.set_trace()
-            
-            for text in texts_ki:
-                all_context.append(text)
 
             llm_response = self.llm("\n".join([query, "\n".join(all_context)]))
 
