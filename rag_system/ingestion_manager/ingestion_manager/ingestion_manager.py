@@ -12,7 +12,7 @@ class IngestionManager():
 
     def _init_folder_ingestion_report(self):
 
-        if not self.json_file_path in self.target_folder.iterdir():
+        if self.json_file_path not in self.target_folder.iterdir():
             init_dict = {'init':'ok',
                            'date_init': datetime.now().isoformat()}
             #write JSON files:
@@ -25,7 +25,7 @@ class IngestionManager():
 
     def _write_report(self, pdf_filename, ingestion_report):
 
-        if not self.json_file_path in self.target_folder.iterdir():
+        if self.json_file_path not in self.target_folder.iterdir():
             self._init_folder_ingestion_report()
 
         with self.json_file_path.open("r", encoding="UTF-8") as json_file:
@@ -44,7 +44,7 @@ class IngestionManager():
 
     def _get_ingestion_report(self) -> dict:
 
-        if not self.json_file_path in self.target_folder.iterdir():
+        if self.json_file_path not in self.target_folder.iterdir():
             logging.warning(" No ingestion report json file found...")
             logging.warning(" Generation...")
             self._init_folder_ingestion_report()

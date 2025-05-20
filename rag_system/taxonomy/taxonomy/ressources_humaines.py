@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from enum import Enum
-from typing import Literal, Set
+from typing import Literal
 
 """class RessourcesHumainesMissions(str, Enum):  # Mandatory:	YES, Type:	EXCLUSIVE
     campaign_management = "La gestion des campagnes de recrutement."
