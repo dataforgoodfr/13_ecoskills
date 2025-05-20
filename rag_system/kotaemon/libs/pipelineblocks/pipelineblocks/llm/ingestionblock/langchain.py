@@ -47,8 +47,8 @@ class LangChainMetadatasLLMInference(MetadatasLLMInfBlock):
 
         # First retry strategy
         if not response or not isinstance(response, dict):
-            for i in range(3):
-                time.sleep(1 + i)
+            for _ in range(3):
+                time.sleep(1)
                 response = struct_llm.invoke(input_)
                 if response or isinstance(response, dict):
                     break
@@ -113,8 +113,8 @@ class LangChainCustomPromptLLMInference(CustomPromptLLMInfBlock):
 
             # First retry strategy
             if not response or not isinstance(response, dict):
-                for i in range(extra_max_retries):
-                    time.sleep(1 + i)
+                for _ in range(extra_max_retries):
+                    time.sleep(1)
                     response = struct_llm.invoke(input_)
                     if response or isinstance(response, dict):
                         break

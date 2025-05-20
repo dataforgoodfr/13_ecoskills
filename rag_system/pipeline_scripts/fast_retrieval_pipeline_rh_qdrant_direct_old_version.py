@@ -6,7 +6,6 @@ from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 
 LOG_LEVEL = logging.INFO

@@ -219,8 +219,8 @@ class IndexingPipeline(VectorIndexing):
         messages = [SystemMessage(content = "You are a scientific expert of questions related to ecology, sustainability and sufficiency. "
             "On the document, you have to make a lecture very attentive and critical."
             "- Just respond with 'yes' or 'no'"),
-            HumanMessage(content = f"Is the following passagge have an evident link with sustainability, sufficiency, or an ecological point of view ?"
-            f"- Just say yes or no."
+            HumanMessage(content = "Is the following passagge have an evident link with sustainability, sufficiency, or an ecological point of view ?"
+            "- Just say yes or no."
             "Here's the document :")]
 
         temperature = 0    
@@ -261,7 +261,7 @@ class IndexingPipeline(VectorIndexing):
                 messages = [SystemMessage(content = "You are a teacher expert, for adult audience."
                 "- Your responses must be in the same language than the original document."
                 "- Affirm ideas as if they were your own, in a direct style, without any reference to the 'document' or 'the text', etc. "),
-                HumanMessage(content = f"Rewrite this passage in a way that is more concise and understandable, with 4-8 sentences or about 80-160 words,"
+                HumanMessage(content = "Rewrite this passage in a way that is more concise and understandable, with 4-8 sentences or about 80-160 words,"
                                 "but stays as close as possible to the original wording."
                                 "- If the original passage is already concise (less than 4 sentences or less than 160 words), keep the same lenght, just clarify some bit."
                             " - Include priority some examples, concrete experiments on the field, provided by institutional or corporate, etc. if and only if they are already presents in the original passage. Don't imagine it or take it from another source."
@@ -326,9 +326,9 @@ class IndexingPipeline(VectorIndexing):
                 logging.info(f"Chunk nb°{nb_chunk} llm inference - mission : {mission} - DONE ! ")
                     
             else:
-                logging.info(f"Extract not found => skip !...")
+                logging.info("Extract not found => skip !...")
         else:
-            logging.info(f"No ecology ! => skip !...")
+            logging.info("No ecology ! => skip !...")
 
     
     def run_one_chunk(self, chunk : str, nb_chunk: int, metadatas_entire_doc : dict | None = None):
@@ -406,11 +406,11 @@ class IndexingPipeline(VectorIndexing):
                                         metadatas_entire_doc=metadatas_ed)
                 except Exception as e:
                     self.curr_error_list.append(f"Extraction error : chunk n°{nb_chunk} - error {e}")
-                    raise ExtractionError(f"Extraction error (functional) : chunk n°{nb_chunk} - error {e}")
+                    raise ExtractionError(f"Extraction error (functional) : chunk n°{nb_chunk} - error {e}") from e
                 
         except Exception as e:
             self.curr_error_list.append(f"Complete extraction error for this doc : {e}")
-            raise ExtractionError(f"Complete extraction error for this doc : - error {e}")
+            raise ExtractionError(f"Complete extraction error for this doc : - error {e}") from e
 
             
         logging.info("All chunks metadatas inference for this doc : DONE.")
@@ -500,7 +500,7 @@ class IndexingPipeline(VectorIndexing):
                         self._send_report_to_ingestion_manager(pdf_filename=pdf_file_str)
                         logging.warning(error_message)
 
-                except ExtractionError as e:
+                except ExtractionError:
                     error_message = f"Extraction Error for this pdf file : '{pdf_file_str}'"
                     self.ingestion_report['status'] = 'failed'
                     self.ingestion_report['error_log'] = self.curr_error_list

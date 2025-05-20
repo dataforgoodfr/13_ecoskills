@@ -6,7 +6,6 @@ from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 
 LOG_LEVEL = logging.INFO
@@ -182,7 +181,7 @@ class RetrievalPipeline(VectorRetrieval):
                 qu'est-ce que je pourrais faire de concret pour agir pour 
                 la transition écologique et le développement durable ? """
 
-            query = f""" 
+            query = """ 
                 - Organise ta réponse sous la forme d'une fiche pratique qui comprend 6 à 10 points.
                 - Tu peux appuyer chacun de tes points de la fiche par des expériences concrètes du terrain que tu as pris dans le corpus de documents, en étant fidèle à ces expériences de terrain.
                 Ces expériences doivent être liées à des entreprises ou des institutions présentes dans les documents de contexte et que tu peux citer.

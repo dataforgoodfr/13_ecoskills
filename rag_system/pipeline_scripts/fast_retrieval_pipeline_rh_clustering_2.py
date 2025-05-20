@@ -12,11 +12,9 @@ from dotenv import dotenv_values
 from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
-from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.llms.chats.langchain_based import LCChatMistral
 from pipelineblocks.llm.ingestionblock.langchain import LangChainCustomPromptLLMInference
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 from kotaemon.base.schema import HumanMessage, SystemMessage
 
@@ -308,7 +306,7 @@ class RetrievalPipeline(VectorRetrieval):
 
                 if len(filtered_text) > 0:
 
-                    logging.info(f"Paragraph reformulation...")
+                    logging.info("Paragraph reformulation...")
 
                     all_docs = "\n\n".join(filtered_text)
 
@@ -339,7 +337,7 @@ class RetrievalPipeline(VectorRetrieval):
                     
                     time.sleep(DELAY_BETWEEN_REQUEST) # to not excedding request time
 
-                    logging.info(f"PAragraph Title generation...")
+                    logging.info("PAragraph Title generation...")
 
                     title_used_str = ", ".join(title_used)
 

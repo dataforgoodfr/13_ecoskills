@@ -1,7 +1,6 @@
 import logging
 import pathlib
 import argparse
-from datetime import datetime
 import time
 import uuid
 
@@ -10,13 +9,11 @@ from pathlib import Path
 from kotaemon.base import Param, lazy, Document
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices import VectorIndexing
-from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.llms.chats.langchain_based import LCChatMistral
 
 from llama_index.core.readers.file.base import default_file_metadata_func
 
 from pipelineblocks.extraction.pdfextractionblock.pdf_to_markdown import PdfExtractionToMarkdownBlock
-from pipelineblocks.llm.ingestionblock.openai import OpenAIMetadatasLLMInference, OpenAICustomPromptLLMInference
 from pipelineblocks.llm.ingestionblock.langchain import LangChainMetadatasLLMInference, LangChainCustomPromptLLMInference
 from taxonomy.document import EntireDocument
 
@@ -354,9 +351,9 @@ class IndexingPipelineShortCut(IndexPipeline):
             if not isinstance(metadatas_ed, dict):
                 raise ExtractionError("Sorry, but response from llm is not well formated...")
             
-        except:
-            logging.warning("Error summarization... doc with a too large context ? Trying to reduce it...")
-            for i in range(3):
+        except Exception as e:
+            logging.warning(f"Error summarization... doc with a too large context ? Trying to reduce it... Initial error : {e}")
+            for _ in range(3):
                 try:
                     lenght_et = len(entire_text)
                     entire_text = entire_text[lenght_et // 3 : - lenght_et // 3]
@@ -368,7 +365,7 @@ class IndexingPipelineShortCut(IndexPipeline):
                     if isinstance(metadatas_ed, dict):
                         break
                     
-                except:
+                except Exception as e:
                     pass
 
         
@@ -457,10 +454,10 @@ class IndexingPipelineShortCut(IndexPipeline):
                                                                     language='French')
                         chunk.text = trad
 
-                        logging.info(f"French traduction done. ")
+                        logging.info("French traduction done. ")
                     
                     else:
-                        logging.info(f"- No traductino required (doc already in French)...")
+                        logging.info("- No traductino required (doc already in French)...")
 
 
                     missions_list, mission_justifications_answers, extraction_error = self.inference_on_one_chunk(chunk = chunk,
@@ -479,11 +476,11 @@ class IndexingPipelineShortCut(IndexPipeline):
 
                 except Exception as e:
                     logging.warning(f"Extraction error : chunk n°{nb_chunk} - error {e}")
-                    raise ExtractionError(f"Extraction error (functional) : chunk n°{nb_chunk} - error {e}")
+                    raise ExtractionError(f"Extraction error (functional) : chunk n°{nb_chunk} - error {e}") from e
                 
         except Exception as e:
             logging.warning(f"Complete extraction error for this doc : {e}")
-            raise ExtractionError(f"Complete extraction error for this doc : - error {e}")
+            raise ExtractionError(f"Complete extraction error for this doc : - error {e}") from e
 
             
         logging.info("All chunks metadatas inference for this doc : DONE.")

@@ -6,10 +6,13 @@ from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 
 from prompts_rh.missions import STRUCTURED_MISSION_DICT
+from enum import Enum
+
+from pydantic import BaseModel
+
 
 LOG_LEVEL = logging.INFO
 # When you set the level, all messages from a higher level of severity are also

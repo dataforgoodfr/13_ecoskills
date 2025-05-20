@@ -12,16 +12,12 @@ from dotenv import dotenv_values
 from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
-from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.llms.chats.langchain_based import LCChatMistral
 from pipelineblocks.llm.ingestionblock.langchain import LangChainCustomPromptLLMInference
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 from kotaemon.base.schema import HumanMessage, SystemMessage
 
-from scipy.sparse import csr_matrix
-from sklearn.cluster import KMeans
 
 from prompts_rh.missions import STRUCTURED_MISSION_DICT
 
@@ -234,7 +230,7 @@ class RetrievalPipeline(VectorRetrieval):
             print(f"All scores : {all_scores}")
 
 
-            final_text_list = [text for text, id in zip(all_texts, all_ids) if id not in seen_text_list]
+            final_text_list = [text for text, id in zip(all_texts, all_ids, strict=False) if id not in seen_text_list]
             seen_text_list.extend(all_ids)
             
             logging.info(f"Corpus nb texts : {len(final_text_list)}.")

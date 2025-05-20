@@ -7,7 +7,6 @@ from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
 from kotaemon.llms.chats.openai import ChatOpenAI
 from kotaemon.storages import LanceDBDocumentStore
-from kotaemon.storages.vectorstores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient, models
 
 from scipy.sparse import csr_matrix
@@ -150,7 +149,7 @@ class RetrievalPipeline(VectorRetrieval):
 
         all_text = []
 
-        for i, centroid in enumerate(kmeans.cluster_centers_):
+        for centroid in kmeans.cluster_centers_:
 
             best_id = np.argmax(centroid)
 
