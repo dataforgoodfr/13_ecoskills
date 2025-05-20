@@ -2,3 +2,5 @@
 ollama
 qdrant_data
 data_pdf/*
+pipeline_scripts/results/*
+pipeline_scripts/pdf_test/*

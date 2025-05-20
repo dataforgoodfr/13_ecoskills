@@ -30,6 +30,22 @@ Depuis le dossier 'rag_system' où se trouve le docker compose :
 
 <code> docker compose exec -it kotaemon -p 11434:11434 bash </code>
 
+
+Pour travailler dans l'app Kotaemon avec la vectorstore Qdrant , il faut l'indiquer dans le fichier 'flowsettings.py' :
+
+<code>
+KH_VECTORSTORE = {
+
+    "__type__": "kotaemon.storages.QdrantVectorStore",
+
+    "url": "http://172.17.0.1:6333",
+
+    "api_key": "None"
+}
+
+</code>
+
+
 Puis lancer l'app avec la commande : ./launch.sh
 
 (ou les scripts customs dans le dossier pipeline_scripts mappé à l'intérieur du container si besoin)

@@ -40,7 +40,7 @@ VECTOR_STORE_DEPLOYMENT = 'docker'
 DOCSTORE_PATH = "/app/ktem_app_data/user_data/docstore"
 COLLECTION_NAME= 'index_1' # Check here your collection throught QDRANT Database dashboard & collection in docstore (ktem_app_data/user_data/doc_store)
 
-PDF_FOLDER = "./data_pdf/other_lit"
+PDF_FOLDER = "./data_pdf/test"
 
 # ---- Do not touch (temporary) ------------- #
 
@@ -147,9 +147,9 @@ class IndexingPipeline(VectorIndexing):
             if metadata_key in metadatas_base.keys():
                 content_list = metadatas_base[metadata_key]
                 if content_list is not None:
-                    if content_list.isinstance(str):
+                    if isinstance(content_list, str):
                         content_list = [content_list]
-                    if content_list.isinstance(list):
+                    if isinstance(content_list, list):
                         for text in content_list:
                             all_text.append(text)
                             all_metadatas.append(self.enrich_metadatas_layer(metadatas_base={},
