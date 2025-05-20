@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 from enum import Enum
 
+from dotenv import dotenv_values
+
 from kotaemon.base import Param, lazy
 from kotaemon.embeddings import OpenAIEmbeddings
 from kotaemon.indices.vectorindex import VectorRetrieval
@@ -49,6 +51,8 @@ logging.basicConfig(
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
+EXPORT_FILENAME = "clustering_3_test"
+
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
@@ -65,6 +69,8 @@ DELAY_BETWEEN_REQUEST = 1 #seconds
 #PDF_FOLDER = "./data_pdf/other_lit"
 
 # ---- Do not touch (temporary) ------------- #
+
+MISTRAL_API_KEY = dotenv_values()['MISTRAL_API_KEY']
 
 ollama_host = '172.17.0.1' if OLLAMA_DEPLOYMENT == 'docker' else 'localhost'
 qdrant_host = '172.17.0.1' if VECTOR_STORE_DEPLOYMENT == 'docker' else 'localhost'
@@ -113,7 +119,7 @@ class RetrievalPipeline(VectorRetrieval):
         lazy(LangChainCustomPromptLLMInference).withx(
             llm = LCChatMistral(
                 model="open-mistral-nemo",
-                mistral_api_key="mHJJoBJzKeWylZs28Iy9aTqIxADTD5zK",
+                mistral_api_key=MISTRAL_API_KEY,
                 temperature=0.3
                 ))
     )
@@ -224,9 +230,13 @@ class RetrievalPipeline(VectorRetrieval):
 
                 associated_scores = centroid[selected_idx]
 
-                all_text = self.doc_store.get(list(ids[selected_idx]))
+                list_selected_ids = list(ids[selected_idx])
 
-                all_clusters[i] = {'all_text' : [text.content for text in all_text],
+                all_text = [self.doc_store.get(id) for id in list_selected_ids]
+
+                all_content = [text.content for text in all_text]
+
+                all_clusters[i] = {'all_text' : all_content,
                                'all_scores' : associated_scores}
                 
             else:
@@ -255,7 +265,7 @@ class RetrievalPipeline(VectorRetrieval):
                                                                     "missions_list[]" : mission
                                                                     },
                                                 n_cluster=6,
-                                                top_k = 2)
+                                                top_k = 3)
             
             logging.info("Clustering DONE.")
 
@@ -307,7 +317,7 @@ class RetrievalPipeline(VectorRetrieval):
                                         "Ta tâche est de reformuler légèrement un document pour améliorer sa clarté en faisant référence exclusivement à ce document fourni."
                                         ),
                         HumanMessage(content = f"""A partir du document suivant,
-                                                peux-tu écrire la même chose en 1 à 2 paragraphes sans aucun titre ?
+                                                peux-tu écrire la même chose en environ 100 à 200 tokens sans aucun titre ?
                                                     - Génère un à deux paragraphes seulement avec toutes les références, idées, examples très précis inclus dans le document.
                                                     - Ne mets pas de titre et va vraiment à l'essentiel des idées, références et examples développés.
                                                     - Ne dis jamais 'le document dit que...' ou 'le document met en lumière...' etc. Fais comme si tu affirmais toi-même les choses.
@@ -361,16 +371,18 @@ class RetrievalPipeline(VectorRetrieval):
                     
                     logging.info(f"--- LLM RESPONSE --- \n\n {complete_text}")
 
-                    with open(DOC_RESULT_PATH + 'clustering_2_test.doc', 'a') as f:
-                        f.write(f"--- CLUSTER n° {cluster_idx} --- \n ***RAW CHUNKS*** : \n {all_docs}  \n\n --- **** LLM RESPONSE **** --- \n\n {complete_text}")
+                    grey_color = "\x1b[7m"
+
+                    with open(DOC_RESULT_PATH + f'{EXPORT_FILENAME}.doc', 'a') as f:
+                        f.write(f"\n % --- CLUSTER n° {cluster_idx} --- \n ***RAW CHUNKS*** : \n {all_docs}  \n\n --- {grey_color} **** LLM RESPONSE **** --- \n\n {complete_text}")
 
                     all_paragraph.append(f"\n\n {complete_text}")
 
-            # Final building 
+            # Final building
                 
             final_text = "\n\n".join(all_paragraph)
 
-            with open(DOC_RESULT_PATH + 'clustering_2_test_synthese.doc', 'a') as f:
+            with open(DOC_RESULT_PATH + f'{EXPORT_FILENAME}_synthese.doc', 'a') as f:
                 f.write(f"\n \n \n ### LLM FINAL TEXT ### : \n {final_text} \n \n")
 
         return None

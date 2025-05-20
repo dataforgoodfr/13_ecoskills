@@ -35,6 +35,7 @@ from enum import Enum
 
 from prompts_rh.missions import STRUCTURED_MISSION_DICT
 
+from dotenv import dotenv_values
 
 LOG_LEVEL = logging.INFO
 # When you set the level, all messages from a higher level of severity are also
@@ -67,7 +68,7 @@ VECTOR_STORE_DEPLOYMENT = 'docker'
 COLLECTION_ID = 8
 USER_ID = '2bd87cee60a5430ca23c84ee80d81cfa'
 
-PDF_FOLDER = "./data_pdf/academic_lit"
+PDF_FOLDER = "./data_pdf/from_wlearn"
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
@@ -82,6 +83,8 @@ CHUNK_OVERLAP = 100
 
 EXTRA_MAX_RETRIES = 6
 DELAY_BETWEEN_REQUEST = 1 #seconds
+
+MISTRAL_API_KEY = dotenv_values()['MISTRAL_API_KEY']
 
 
 # ---- Do not touch (temporary) ------------- #
@@ -128,7 +131,7 @@ class IndexingPipelineShortCut(IndexPipeline):
         lazy(LangChainMetadatasLLMInference).withx(
             llm = LCChatMistral(
                 model="open-mistral-nemo",
-                mistral_api_key="mHJJoBJzKeWylZs28Iy9aTqIxADTD5zK",
+                mistral_api_key=MISTRAL_API_KEY,
                 temperature=0
                 ),
             taxonomy = EntireDocument,
@@ -140,7 +143,7 @@ class IndexingPipelineShortCut(IndexPipeline):
         lazy(LangChainCustomPromptLLMInference).withx(
             llm = LCChatMistral(
                 model="open-mistral-nemo",
-                mistral_api_key="mHJJoBJzKeWylZs28Iy9aTqIxADTD5zK",
+                mistral_api_key=MISTRAL_API_KEY,
                 temperature=0.1
                 ))
     )
@@ -340,19 +343,35 @@ class IndexingPipelineShortCut(IndexPipeline):
 
     def inference_and_summarize_entire_doc(self, entire_text: str, metadata_vs_base: dict | None = None):
 
-        metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
+        metadatas_ed = None
+
+        try:
+
+            metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
                                                             doc_type  = 'entire_doc', 
                                                             inference_type = 'generic')
+            
+            if not isinstance(metadatas_ed, dict):
+                raise ExtractionError("Sorry, but response from llm is not well formated...")
+            
+        except:
+            logging.warning("Error summarization... doc with a too large context ? Trying to reduce it...")
+            for i in range(3):
+                try:
+                    lenght_et = len(entire_text)
+                    entire_text = entire_text[lenght_et // 3 : - lenght_et // 3]
+                    logging.warning(f"Failed summarization & metadatas inference on entire doc - lenght {lenght_et} letters. Retry with lenght {len(entire_text)} letters...")
+                    metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
+                                                                doc_type  = 'entire_doc', 
+                                                                inference_type = 'generic')
+                    
+                    if isinstance(metadatas_ed, dict):
+                        break
+                    
+                except:
+                    pass
+
         
-        if not isinstance(metadatas_ed, dict):
-            for i in range(2):
-                lenght_et = len(entire_text)
-                entire_text = entire_text[lenght_et // 3 : - lenght_et // 3]
-                logging.warning(f"Failed summarization & metadatas inference on entire doc - lenght {lenght_et} letters. Retry with lenght {len(entire_text)} letters...")
-                metadatas_ed = self.metadatas_llm_inference_block_entire_doc.run(entire_text,  
-                                                            doc_type  = 'entire_doc', 
-                                                            inference_type = 'generic')
-                
         if not isinstance(metadatas_ed, dict):
             raise RuntimeError("Failed summarization inference & metadatas for this doc...")
         
