@@ -13,6 +13,8 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Generator, Optional, Sequence
 
+import boto3
+
 import tiktoken
 from decouple import config
 from ktem.db.models import engine
@@ -337,6 +339,8 @@ class IndexPipeline(BaseComponent):
     VS = Param(help="The VectorStore")
     DS = Param(help="The DocStore")
     FSPath = Param(help="The file storage path")
+    CloudFSUri = Param(help="The cloud file storage uri (if a cloud provider is used)")
+    CloudFSFolder = Param(help="The cloud file storage folder (if a cloud provider is used)")
     user_id = Param(help="The user id")
     collection_name: str = "default"
     private: bool = False
@@ -526,7 +530,15 @@ class IndexPipeline(BaseComponent):
         with file_path.open("rb") as fi:
             file_hash = sha256(fi.read()).hexdigest()
 
-        shutil.copy(file_path, self.FSPath / file_hash)
+        if self.FSPath:
+            shutil.copy(file_path, self.FSPath / file_hash)
+
+        if self.CloudFSUri:
+            s3 = boto3.resource('s3')
+            bucket = s3.Bucket(self.CloudFSUri.replace("s3://", "").split("/")[0])
+            with file_path.open("rb") as content:
+                bucket.upload_fileobj(content, f"{self.CloudFSFolder}/{file_hash}")
+
         source = self.Source(
             name=file_path.name,
             path=file_hash,
@@ -772,6 +784,8 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
             VS=self.VS,
             DS=self.DS,
             FSPath=self.FSPath,
+            CloudFSUri = self.CloudFSUri,
+            CloudFSFolder = self.CloudFSFolder,
             user_id=self.user_id,
             private=self.private,
             embedding=self.embedding,

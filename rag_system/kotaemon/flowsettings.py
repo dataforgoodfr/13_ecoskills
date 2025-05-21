@@ -83,7 +83,13 @@ KH_FEATURE_USER_MANAGEMENT_PASSWORD = str(
 )
 KH_ENABLE_ALEMBIC = False
 KH_DATABASE = f"sqlite:///{KH_USER_DATA_DIR / 'sql.db'}"
+#KH_DATABASE = "postgresql://postgres:my_pass@postgres-db:5432/my_db"
+
 KH_FILESTORAGE_PATH = str(KH_USER_DATA_DIR / "files")
+
+KH_USE_CLOUD_FILESTORAGE = False
+#KH_CLOUD_FILESTORAGE_URI = "s3://test-ecoskills/files/"
+
 KH_WEB_SEARCH_BACKEND = (
     "kotaemon.indices.retrievers.tavily_web_search.WebSearch"
     # "kotaemon.indices.retrievers.jina_web_search.WebSearch"
@@ -94,13 +100,16 @@ KH_DOCSTORE = {
     # "__type__": "kotaemon.storages.SimpleFileDocumentStore",
     "__type__": "kotaemon.storages.LanceDBDocumentStore",
     "path": str(KH_USER_DATA_DIR / "docstore"),
+    #"path": "s3://test-ecoskills/docstore/"
 }
 KH_VECTORSTORE = {
     # "__type__": "kotaemon.storages.LanceDBVectorStore",
-    "__type__": "kotaemon.storages.ChromaVectorStore",
+    #"__type__": "kotaemon.storages.ChromaVectorStore",
     # "__type__": "kotaemon.storages.MilvusVectorStore",
-    # "__type__": "kotaemon.storages.QdrantVectorStore",
-    "path": str(KH_USER_DATA_DIR / "vectorstore"),
+     "__type__": "kotaemon.storages.QdrantVectorStore",
+     "url":"http://172.17.0.1:6333",
+     "api_key":"None"
+    #"path": str(KH_USER_DATA_DIR / "vectorstore"),
 }
 KH_LLMS = {}
 KH_EMBEDDINGS = {}
