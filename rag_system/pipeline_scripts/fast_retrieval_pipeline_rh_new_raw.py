@@ -47,7 +47,7 @@ logging.basicConfig(
 
 FUNCTIONAL_DOMAIN = "Ressources Humaines (RH)"
 
-EXPORT_FILENAME = "raw_1_test"
+EXPORT_FILENAME = "raw_2_test"
 
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
@@ -254,7 +254,7 @@ class RetrievalPipeline(VectorRetrieval):
                                             \n \n Attention, rappelle-toi :
                                             Il est interdit de citer d'autres expériences ou éléments que celles des documents.
                                             Il est interdit de citer d'autres entreprises ou institutions que celles qui sont citées dans les documents.
-                                            Tu peux citer parfois les documents en précisant des références précises comme par exemple son numéro de document indiqué.
+                                            Tu dois citer les documents avec son numéro de document indiqué en mettant cette référence entre parenthèse directement dans le corps du texte.
                                             """)]
         
             temperature = 0.1
