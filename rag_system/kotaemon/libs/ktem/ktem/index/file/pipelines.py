@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Generator, Optional, Sequence
 
 import boto3
-
 import tiktoken
 from decouple import config
 from ktem.db.models import engine
@@ -353,7 +352,9 @@ class IndexPipeline(BaseComponent):
             vector_store=self.VS, doc_store=self.DS, embedding=self.embedding
         )
 
-    def handle_docs(self, docs, file_id, file_name, metadatas) -> Generator[Document, None, int]:
+    def handle_docs(
+        self, docs, file_id, file_name, metadatas
+    ) -> Generator[Document, None, int]:
         s_time = time.time()
         text_docs = []
         non_text_docs = []
@@ -616,9 +617,13 @@ class IndexPipeline(BaseComponent):
         raise NotImplementedError
 
     def stream(
-        self, file_path: str | Path, reindex: bool, metadatas: dict = None, **kwargs
+        self,
+        file_path: str | Path,
+        reindex: bool,
+        metadatas: dict | None = None,
+        **kwargs,
     ) -> Generator[Document, None, tuple[str, list[Document]]]:
-        
+
         # check if the file is already indexed
         if isinstance(file_path, Path):
             file_path = file_path.resolve()
@@ -784,8 +789,8 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
             VS=self.VS,
             DS=self.DS,
             FSPath=self.FSPath,
-            CloudFSUri = self.CloudFSUri,
-            CloudFSFolder = self.CloudFSFolder,
+            CloudFSUri=self.CloudFSUri,
+            CloudFSFolder=self.CloudFSFolder,
             user_id=self.user_id,
             private=self.private,
             embedding=self.embedding,
@@ -799,7 +804,11 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
         raise NotImplementedError
 
     def stream(
-        self, file_paths: str | Path | list[str | Path], reindex: bool = False, metadatas: dict = None, **kwargs
+        self,
+        file_paths: str | Path | list[str | Path],
+        reindex: bool = False,
+        metadatas: dict | None = None,
+        **kwargs,
     ) -> Generator[
         Document, None, tuple[list[str | None], list[str | None], list[Document]]
     ]:

@@ -54,11 +54,15 @@ class LangChainMetadatasLLMInference(MetadatasLLMInfBlock):
                     break
         # Second retry strategy
         if not response or not isinstance(response, dict):
-            struct_llm = self.llm.with_structured_output(self.taxonomy, include_raw=True)
+            struct_llm = self.llm.with_structured_output(
+                self.taxonomy, include_raw=True
+            )
             response = struct_llm.invoke(input_)
-            response = str(response['raw'].content)
-            if response!="" and response!=" ":        
-                response = super()._convert_content_to_pydantic_schema(response, pydantic_schema=self.taxonomy)
+            response = str(response["raw"].content)
+            if response != "" and response != " ":
+                response = super()._convert_content_to_pydantic_schema(
+                    response, pydantic_schema=self.taxonomy
+                )
 
         # TODO validate model
         """

@@ -32,4 +32,3 @@ jobs:
       - name: Push Rebased Branch (if successful)
         run: |
           git push origin HEAD --force
-

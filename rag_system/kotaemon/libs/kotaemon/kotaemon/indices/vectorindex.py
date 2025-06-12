@@ -81,16 +81,21 @@ class VectorIndexing(BaseIndexing):
             print("Adding documents to doc store")
             self.doc_store.add(docs)
 
-    def add_to_vectorstore(self, docs: list[Document], metadatas: list[dict] = None):
+    def add_to_vectorstore(
+        self, docs: list[Document], metadatas: list[dict] | None = None
+    ):
         # in case we want to skip embedding
         if self.vector_store:
             if metadatas:
-                print(f"Getting embeddings for {len(docs)} nodes with {len(metadatas)} metadatas")
+                print(
+                    f"Getting embeddings for {len(docs)} \
+                        nodes with {len(metadatas)} metadatas"
+                )
             else:
                 print(f"Getting embeddings for {len(docs)} nodes without any metadatas")
-            
+
             embeddings = self.embedding(docs)
-            
+
             print("Adding embeddings to vector store")
             self.vector_store.add(
                 embeddings=embeddings,
@@ -98,7 +103,11 @@ class VectorIndexing(BaseIndexing):
                 metadatas=metadatas,
             )
 
-    def run(self, text: str | list[str] | Document | list[Document], metadatas: list[dict]=None):
+    def run(
+        self,
+        text: str | list[str] | Document | list[Document],
+        metadatas: list[dict] | None = None,
+    ):
         input_: list[Document] = []
         if not isinstance(text, list):
             text = [text]

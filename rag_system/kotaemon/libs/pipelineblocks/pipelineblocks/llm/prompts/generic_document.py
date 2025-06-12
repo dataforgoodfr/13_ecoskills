@@ -1,4 +1,3 @@
-
 def generic_extraction_prompt_entire_doc(text: str, language: str = "English") -> str:
     """
     Create a prompt for the basic extraction of any kind of document.

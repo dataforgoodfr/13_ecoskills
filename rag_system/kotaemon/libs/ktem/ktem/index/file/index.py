@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, Optional, Type
 
 import boto3
-
 from ktem.components import filestorage_path, get_docstore, get_vectorstore
 from ktem.db.engine import engine
 from ktem.index.base import BaseIndex
@@ -466,7 +465,9 @@ class FileIndex(BaseIndex):
             },
         }
 
-    def get_indexing_pipeline(self, settings, user_id) -> BaseFileIndexIndexing:
+    def get_indexing_pipeline(
+        self, settings, user_id, metadatas: list | None
+    ) -> BaseFileIndexIndexing:
         """Define the interface of the indexing pipeline"""
 
         prefix = f"index.options.{self.id}."
