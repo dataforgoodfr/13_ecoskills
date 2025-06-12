@@ -88,8 +88,7 @@ class VectorIndexing(BaseIndexing):
         if self.vector_store:
             if metadatas:
                 print(
-                    f"Getting embeddings for {len(docs)} \
-                        nodes with {len(metadatas)} metadatas"
+                    f"Getting embeddings for {len(docs)} nodes with {len(metadatas)} metadatas"
                 )
             else:
                 print(f"Getting embeddings for {len(docs)} nodes without any metadatas")

@@ -1,4 +1,4 @@
-from typing import Any, AsyncGenerator, Iterator, Optional
+from typing import Any, AsyncGenerator, Iterator
 
 from pipelineblocks.llm.prompts.generic_document import (
     generic_extraction_prompt_chunk,
@@ -34,8 +34,7 @@ class BaseLLMIngestionBlock(BaseComponent):
 
 class MetadatasLLMInfBlock(BaseLLMIngestionBlock):
 
-    """Parent class for LLM Inference blocks that deduce metadatas
-    from a document, according to a pydantic schema object"""
+    """Parent class for LLM Inference blocks that deduce metadatas from a document, according to a pydantic schema object"""
 
     taxonomy: BaseModel
     language: str = "English"
@@ -105,9 +104,12 @@ class MetadatasLLMInfBlock(BaseLLMIngestionBlock):
         self, language: str = "English"
     ) -> SystemMessage:
 
-    def run(self, *args, **kwargs) -> BaseModel:
+        return SystemMessage(
+            content=f"You must respond only in {language}, regardless of the input language."
+        )
+
+    def run(self, *args, **kwargs) -> BaseModel | NotImplementedError:
         return NotImplementedError
-    
 
 
 class CustomPromptLLMInfBlock(BaseLLMIngestionBlock):
@@ -124,7 +126,6 @@ class CustomPromptLLMInfBlock(BaseLLMIngestionBlock):
 
     def run(self, *args, **kwargs) -> BaseModel:
         return NotImplementedError
-    
 
 
 # TODO --- Exemple

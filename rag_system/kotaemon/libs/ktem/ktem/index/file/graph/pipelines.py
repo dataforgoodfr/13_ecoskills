@@ -152,16 +152,12 @@ class GraphRAGIndexingPipeline(IndexDocumentPipeline):
                     yield Document(channel="debug", text=line)
 
     def stream(
-        self,
-        file_paths: str | Path | list[str | Path],
-        reindex: bool = False,
-        metadatas: dict | None = None,
-        **kwargs,
+        self, file_paths: str | Path | list[str | Path], reindex: bool = False, **kwargs
     ) -> Generator[
         Document, None, tuple[list[str | None], list[str | None], list[Document]]
     ]:
         file_ids, errors, all_docs = yield from super().stream(
-            file_paths, reindex=reindex, metadatas=metadatas, **kwargs
+            file_paths, reindex=reindex, **kwargs
         )
 
         # assign graph_id to file_ids

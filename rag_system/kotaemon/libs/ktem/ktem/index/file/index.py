@@ -154,7 +154,10 @@ class FileIndex(BaseIndex):
         self._vs: BaseVectorStore = get_vectorstore(f"index_{self.id}")
         self._docstore: BaseDocumentStore = get_docstore(f"index_{self.id}")
 
-        if hasattr(flowsettings, f"KH_USE_CLOUD_FILESTORAGE") and flowsettings.KH_USE_CLOUD_FILESTORAGE:
+        if (
+            hasattr(flowsettings, f"KH_USE_CLOUD_FILESTORAGE")
+            and flowsettings.KH_USE_CLOUD_FILESTORAGE
+        ):
             self._fs_path = None
             self._cloud_fs_uri = flowsettings.KH_CLOUD_FILESTORAGE_URI
             self._cloud_fs_folder = f"index_{self.id}"

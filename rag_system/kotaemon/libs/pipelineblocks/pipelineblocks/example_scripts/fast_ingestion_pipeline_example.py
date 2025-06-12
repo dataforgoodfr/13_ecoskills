@@ -39,8 +39,7 @@ class IndexingPipeline(VectorIndexing):
     )
 
     # At least, one taxonomy = one llm_inference_block
-    # (Multiply the number of llm_inference_block when you need
-    # handle more than one taxonomy
+    # (Multiply the number of llm_inference_block when you need handle more than one taxonomy
     metadatas_llm_inference_block: OpenAIMetadatasLLMInference = Param(
         lazy(OpenAIMetadatasLLMInference).withx(
             llm=ChatOpenAI(
@@ -143,7 +142,6 @@ if __name__ == "__main__":
     )
     print(
         rag_pipeline.run(
-            "Who wrote research papers abouts the impacts of \
-                digitalization and societal changes on energy transition ?"
+            "Who wrote research papers abouts the impacts of digitalization and societal changes on energy transition ?"
         )
     )

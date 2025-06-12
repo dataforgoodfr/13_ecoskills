@@ -319,6 +319,54 @@ class FileIndexPage(BasePage):
                         # TODO - New metadatas system
                         self.metadatas_values = []
                         self.metadatas_keys = []
+                        """
+
+                        for field_name, field_info in paper.model_fields.items():
+                            field_type = field_info.annotation
+                            # Handle Enums (Dropdown)
+                            if isinstance(field_type, type) and issubclass(field_type, Enum):
+                                choices = [e.value for e in field_type]
+                                input_component = gr.Dropdown(choices, label=field_name, value=choices[0], interactive=True)
+
+                            # String fields (Textboxes)
+                            elif field_type == str:
+                                input_component = gr.Textbox(label=field_name, value="")
+
+                            # Integer fields (Number input)
+                            elif field_type == int:
+                                input_component = gr.Number(label=field_name, value=2024)
+
+                            # Boolean fields (Checkbox)
+                            elif field_type == bool:
+                                input_component = gr.Checkbox(label=field_name, value=False)
+
+
+                                elif get_origin(field_type) is list:
+                                sub_item = get_args(field_type)[0]
+                                if isinstance(sub_item , type) and issubclass(sub_item , BaseModel):
+
+                                    sub_input = []
+                                    for field_name, field_info in sub_item.model_fields.items():
+                                        field_type = field_info.annotation
+                                        # Handle Enums (Dropdown)
+                                        if isinstance(field_type, type) and issubclass(field_type, Enum):
+                                            choices = [e.value for e in field_type]
+                                            sub_imp_comp = gr.Dropdown(choices, label=field_name, value=choices[0], interactive=True)
+
+                                        # String fields (Textboxes)
+                                        elif field_type == str:
+                                            sub_imp_comp = gr.Textbox(label=field_name, value="")
+
+                                        # Integer fields (Number input)
+                                        elif field_type == int:
+                                            sub_imp_comp = gr.Number(label=field_name, value=2024)
+
+                                        # Boolean fields (Checkbox)
+                                        elif field_type == bool:
+                                            sub_imp_comp = gr.Checkbox(label=field_name, value=False)
+                                     """
+
+                        # self.metadatas.append(sub_imp_comp)
 
                     self.upload_button = gr.Button(
                         "Upload and Index", variant="primary"
