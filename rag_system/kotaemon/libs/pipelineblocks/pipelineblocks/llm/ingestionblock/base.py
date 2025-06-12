@@ -54,20 +54,6 @@ class MetadatasLLMInfBlock(BaseLLMIngestionBlock):
         
         else:
             raise NotImplementedError("Please provide a mode implemented for this method '_convert_content_to_pydantic_schema' ")
-    
-    def _adjust_prompt_according_to_doc_type(self, text, doc_type = 'entire_doc', inference_type: str = "generic") -> str:
-
-        if mode == "json":
-
-            return self.taxonomy.model_validate_json(content)
-
-        elif mode == "dict":
-            return self.taxonomy.model_validate(content)
-
-        else:
-            raise NotImplementedError(
-                "Please provide a mode implemented for this method '_convert_content_to_pydantic_schema' "
-            )
 
     def _adjust_prompt_according_to_doc_type(
         self, text, doc_type="entire_doc", inference_type: str = "generic"
