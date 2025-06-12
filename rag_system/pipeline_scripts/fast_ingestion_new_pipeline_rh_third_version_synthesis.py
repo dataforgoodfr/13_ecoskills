@@ -62,7 +62,7 @@ parser = argparse.ArgumentParser(
 OLLAMA_DEPLOYMENT = 'docker'
 VECTOR_STORE_DEPLOYMENT = 'docker'
 
-COLLECTION_ID = 8
+COLLECTION_ID = 1
 USER_ID = '2bd87cee60a5430ca23c84ee80d81cfa'
 
 PDF_FOLDER = "./data_pdf/from_wlearn"
@@ -548,6 +548,10 @@ class IndexingPipelineShortCut(IndexPipeline):
         to_index_chunks = all_chunks + non_text_docs + thumbnail_docs + [summary]
         to_index_metadatas = text_vs_metadatas + other_vs_metadatas + [metadatas_entire_doc]
 
+        # enrich metadata for doctore ingestion (inside the 'core' Document format)
+        for chunk, metadatas in zip(to_index_chunks, to_index_metadatas):
+            chunk.metadata.update(metadatas)
+            
         logging.info(f"Got {len(all_chunks)} text chunks - {len(thumbnail_docs)} page thumbnails - {len(non_text_docs)} other type chunks - 1 summary")
         logging.info(f"And {len(to_index_metadatas)} metadatas list to index.")
 
