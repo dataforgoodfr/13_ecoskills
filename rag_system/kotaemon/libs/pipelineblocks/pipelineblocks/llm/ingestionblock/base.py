@@ -16,11 +16,15 @@ class BaseLLMIngestionBlock(BaseComponent):
 
     """A parent class for all LLM Ingestion Block"""
 
-    def _build_a_system_message_to_force_language(self, language : str = "English") -> SystemMessage:
+    def _build_a_system_message_to_force_language(
+        self, language: str = "English"
+    ) -> SystemMessage:
         """A common method to force a llm to respond only in a specific language."""
-        return SystemMessage(content = f"You must respond only in {language}. Extract key insights as a list of strings.")
+        return SystemMessage(
+            content=f"You must respond only in {language}. Extract key insights as a list of strings."
+        )
 
-    def stream(self, *args, **kwargs) -> Iterator[Document] | None :
+    def stream(self, *args, **kwargs) -> Iterator[Document] | None:
         raise NotImplementedError
 
     def astream(self, *args, **kwargs) -> AsyncGenerator[Document, None] | None:
@@ -95,7 +99,7 @@ class MetadatasLLMInfBlock(BaseLLMIngestionBlock):
         )
 
     def run(self, *args, **kwargs) -> BaseModel | NotImplementedError:
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class CustomPromptLLMInfBlock(BaseLLMIngestionBlock):
@@ -111,7 +115,7 @@ class CustomPromptLLMInfBlock(BaseLLMIngestionBlock):
         return pydantic_schema.model_validate_json(content)
 
     def run(self, *args, **kwargs) -> BaseModel:
-        return NotImplementedError
+        raise NotImplementedError
 
 
 # TODO --- Exemple

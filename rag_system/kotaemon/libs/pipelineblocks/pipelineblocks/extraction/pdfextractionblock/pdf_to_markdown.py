@@ -8,10 +8,11 @@ class PdfExtractionToMarkdownBlock(BasePdfExtractionBlock):
 
     """A Pdf extraction block, that convert a long pdf into chunks or a long text.
     Different methods could be implemented :
-        - 'split_by_page' (by defaut), return a list of markdown, one by page of the original pdf
+        - 'split_by_page' (by default), return a list of markdown, one by page of the original pdf
         - 'group_all' return the entire doc in a long markdown format
 
-    TODO implement other methods like 'split_by_chunks' with the length of each chunk, or 'split_by_parts' with a logic split by part..."""
+    TODO implement other methods like 'split_by_chunks' with the length of each chunk,
+    or 'split_by_parts' with a logic split by part..."""
 
     def word_splitter(self, source_text: str) -> List[str]:
         import re

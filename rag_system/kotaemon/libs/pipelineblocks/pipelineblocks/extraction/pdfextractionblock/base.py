@@ -8,12 +8,12 @@ class BasePdfExtractionBlock(BaseComponent):
     """A simple base class for pdf extraction blocks"""
 
     def stream(self, *args, **kwargs) -> Iterator[Document] | None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def astream(self, *args, **kwargs) -> AsyncGenerator[Document, None] | None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def run(
         self, *args, **kwargs
     ) -> Document | list[Document] | Iterator[Document] | None:
-        return NotImplementedError()
+        raise NotImplementedError
